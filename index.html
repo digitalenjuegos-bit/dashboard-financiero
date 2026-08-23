@@ -376,7 +376,7 @@ function animarNumero(el,destino,prefijo){
   const val=Number(destino)||0;
   const inicio=0,t0=performance.now(),dur=850;
   function paso(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
-    el.textContent=(prefijo||"")+fmt(val*e).slice(1)===""?"":(prefijo||"")+(val*e).toLocaleString("es-EC",{minimumFractionDigits:2,maximumFractionDigits:2});
+    el.textContent=(prefijo||"")+(val*e).toLocaleString("es-EC",{minimumFractionDigits:2,maximumFractionDigits:2});
     if(p<1)requestAnimationFrame(paso);}
   requestAnimationFrame(paso);
 }
@@ -725,8 +725,8 @@ function renderGraficos(eBG,ePB){
   const bgP=[];for(let k=0;k<mesesN;k++){const i=S.deudas.bg.indiceActual+k;bgP.push(i<BG_TABLA.length?BG_TABLA[i][6]:0);}
   const pbP=[];{const cal=pbCalendario();for(let k=0;k<mesesN;k++){pbP.push(k<cal.length?Math.round(cal[k].saldoTras*100)/100:0);}}
   const totalM=labels.map((_,k)=>Math.round((bpP[k]+bgP[k]+pbP[k])*100)/100);
-  // Dona data with coerced values
-  const donutData=[bpSaldo,bgSaldo,pbSaldo];
+  // Dona: valores con coerción, usando SOLO variables en scope (S y los parámetros eBG/ePB)
+  const donutData=[Number(S.deudas.bp?.saldo)||0,Number(eBG?.saldo)||0,Number(ePB?.saldo)||0];
 
   if(chEv)chEv.destroy();
   chEv=new Chart(document.getElementById("chEvolucion"),{
@@ -767,6 +767,8 @@ function renderGraficos(eBG,ePB){
 
 /* ---------- Animación de barras y contadores ---------- */
 function animarDetalles(estados){
+  /* eBG/ePB se calculan AQUÍ: son locales de render()/rerender() y no visibles desde fuera */
+  const eBG=bgEstado(),ePB=pbEstado();
   const map={bp:estados.bp?Number(S.deudas.bp.saldo)||0:0,bg:estados.bg?Number(eBG?.saldo)||0:0,pb:estados.pb?Number(ePB?.saldo)||0:0};
   ["bp","bg","pb"].forEach(id=>{const el=document.getElementById("saldo-"+id);if(el)animarNumero(el,map[id],"$");});
   document.querySelectorAll(".relleno[data-pct]").forEach(r=>{setTimeout(()=>r.style.width=r.dataset.pct+"%",80);});
@@ -874,7 +876,6 @@ function confeti(){
 function rerender(){
   document.getElementById("deudas").innerHTML="";
   render();
-  const eBG=bgEstado(),ePB=pbEstado();
   animarDetalles({bp:true,bg:true,pb:true});
 }
 
