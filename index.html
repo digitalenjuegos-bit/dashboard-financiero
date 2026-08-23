@@ -45,6 +45,7 @@ header .sub{opacity:.85;font-size:.92rem;margin-top:4px}
 .tarjeta{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--sombra);border-top:5px solid var(--c-acento,#333);animation:fadeUp .55s ease;display:flex;flex-direction:column;gap:12px}
 .tarjeta .cab{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .tarjeta .banco{font-weight:800;font-size:1.06rem;display:flex;align-items:center;gap:8px}
+.logo-banco{height:28px;width:auto;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1))}
 .punto{width:11px;height:11px;border-radius:50%;background:var(--c-acento);display:inline-block}
 .tarjeta .prod{font-size:.78rem;color:var(--gris);margin-top:3px;line-height:1.35}
 .badge{border-radius:999px;padding:4px 12px;font-size:.74rem;font-weight:800;white-space:nowrap}
@@ -326,11 +327,19 @@ function estadoInicial(){return{
   ingresosMensuales:1341.70,
   egresosPersonales:100,
   deudas:{
-    bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
+    bp:{saldo:12590.50,cuotaFija:267.88,cuotasPagadas:13,saldoInicialRef:16072.88},
     bg:{indiceActual:11,exigibles:{"12":465.53}},
     pb:{saldo:9028.08,cuotasPagadas:8}
   },
-  pagos:[]
+  pagos:[
+    {deuda:"bp",mes:"2026-08",fecha:"2026-08-18T00:00:00.000Z",monto:267.88,atrasado:false,
+     detalle:"Pago $267.88 (cuota 13 de 60)",
+     snapDeudas:{
+       bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
+       bg:{indiceActual:11,exigibles:{"12":465.53}},
+       pb:{saldo:9028.08,cuotasPagadas:8}
+     }}
+  ]
 };}
 let S=cargar();
 function cargar(){
@@ -535,13 +544,20 @@ function proxBGCuota(){
   const p=bgFilasPendientes();return p.length?p[0].fila[5]:0;
 }
 
+/* ---------- Logos de bancos (URLs directas Wikimedia Commons - dominio público) -------- */
+const LOGOS_BANCOS={
+  bp:"https://upload.wikimedia.org/wikipedia/commons/d/d3/Banco_del_Pac%C3%ADfico.png",
+  bg:"https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Logo_Banco_Guayaquil_Actual.png/1280px-Logo_Banco_Guayaquil_Actual.png",
+  pb:"https://upload.wikimedia.org/wikipedia/commons/1/1d/Produbanco_Logo.png"
+};
+
 /* ---------- Tarjetas ---------- */
 function renderTarjetaBP(e){
   const d=DEUDAS.bp,st=S.deudas.bp,[cls,txt]=ESTADOS[e.estado];
   const pct=Math.max(0,Math.min(100,(1-st.saldo/st.saldoInicialRef)*100));
   document.getElementById("deudas").insertAdjacentHTML("beforeend",
   '<div class="tarjeta" style="--c-acento:'+d.color+'" id="card-bp">'+
-   '<div class="cab"><div><div class="banco"><span class="punto"></span>'+d.banco+'</div>'+
+   '<div class="cab"><div><div class="banco"><img src="'+LOGOS_BANCOS.bp+'" alt="Banco del Pacífico" class="logo-banco"><span class="punto"></span></div>'+
    '<div class="prod">'+d.producto+'</div></div><span class="badge '+cls+'">'+txt+'</span></div>'+
    '<div class="saldo-linea"><span class="monto" id="saldo-bp">$0</span><span class="lbl">saldo actual</span></div>'+
    '<div class="info-grid">'+
@@ -575,7 +591,7 @@ function renderTarjetaBG(e){
   }
   document.getElementById("deudas").insertAdjacentHTML("beforeend",
   '<div class="tarjeta" style="--c-acento:'+d.color+'" id="card-bg">'+
-   '<div class="cab"><div><div class="banco"><span class="punto"></span>'+d.banco+'</div>'+
+   '<div class="cab"><div><div class="banco"><img src="'+LOGOS_BANCOS.bg+'" alt="Banco de Guayaquil" class="logo-banco"><span class="punto"></span></div>'+
    '<div class="prod">'+d.producto+'</div></div><span class="badge '+cls+'">'+txt+'</span></div>'+
    '<div class="saldo-linea"><span class="monto" id="saldo-bg">$0</span><span class="lbl">saldo de capital</span></div>'+
    '<div class="info-grid">'+
@@ -597,7 +613,7 @@ function renderTarjetaPB(e){
   const pct=Math.max(0,Math.min(100,(d.montoOriginal-saldo)/d.montoOriginal*100));
   document.getElementById("deudas").insertAdjacentHTML("beforeend",
   '<div class="tarjeta" style="--c-acento:'+d.color+'" id="card-pb">'+
-   '<div class="cab"><div><div class="banco"><span class="punto"></span>'+d.banco+'</div>'+
+   '<div class="cab"><div><div class="banco"><img src="'+LOGOS_BANCOS.pb+'" alt="Produbanco" class="logo-banco"><span class="punto"></span></div>'+
    '<div class="prod">'+d.producto+'</div></div><span class="badge '+cls+'">'+txt+'</span></div>'+
    '<div class="saldo-linea"><span class="monto" id="saldo-pb">$0</span><span class="lbl">saldo actual</span></div>'+
    '<div class="info-grid">'+
@@ -669,20 +685,22 @@ function registrarPago(id){
   if(id==="bp"){
     const d=DEUDAS.bp,st=S.deudas.bp;
     const atrasado=estaAtrasado(mc,d.diaLimite);
-    const rest=Math.max(1,d.totalCuotas-st.cuotasPagadas);
-    const excedente=Math.max(0,monto-st.cuotaFija);
-    st.saldo=Math.max(0,st.saldo-st.saldo/rest-excedente);
+    /* MODELO SIMPLE: resta directa del monto pagado al saldo */
+    st.saldo=Math.max(0,st.saldo-monto);
     st.cuotasPagadas++;
     registros.push({deuda:"bp",mes:mc,fecha:HOY.toISOString(),monto,atrasado,
-      detalle:"Cuota "+st.cuotasPagadas+" de "+d.totalCuotas+(excedente>0?" + abono "+fmt(excedente):""),
+      detalle:"Pago "+fmt(monto)+" (cuota "+st.cuotasPagadas+" de "+d.totalCuotas+")",
       snapDeudas:snap});
-    if(excedente>0)toast("Abono aplicado: tu saldo bajó y la liberación se adelantó");
+    toast("Pago registrado: saldo actualizado");
   }
   if(id==="bg"){
     const st=S.deudas.bg,e=bgEstado();
     const aPagar=e.vencidas.concat(e.delMes);
     if(!aPagar.length){toast("No hay cuotas pendientes este mes");return;}
     const atrasado=estaAtrasado(mc,DEUDAS.bg.diaPago);
+    /* MODELO SIMPLE: resta directa del monto pagado al saldo */
+    st.saldo=Math.max(0,st.saldo-monto);
+    /* Avanzar índice en tabla real según cuotas cubiertas */
     let acumulado=0,pagas=0;
     for(const p of aPagar){
       const exigible=(st.exigibles&&st.exigibles[String(p.n)])||p.fila[5];
@@ -695,7 +713,7 @@ function registrarPago(id){
     st.indiceActual+=pagas;
     const excedente=monto-acumulado;
     if(excedente>0.01)abonarCapital("bg",excedente,registros,mc);
-    toast(pagas+" cuota(s) registrada(s)"+(excedente>0.01?" + abono simulado":""));
+    toast(pagas+" cuota(s) registrada(s) — saldo actualizado");
   }
   if(id==="pb"){
     const d=DEUDAS.pb,st=S.deudas.pb;
@@ -705,13 +723,13 @@ function registrarPago(id){
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
     if(!fila)fila=cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
-    const excedente=Math.max(0,monto-d.cuota);
-    st.saldo=Math.max(0,st.saldo-fila.capital-excedente);
+    /* MODELO SIMPLE: resta directa del monto pagado al saldo */
+    st.saldo=Math.max(0,st.saldo-monto);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
-      detalle:"Cuota "+fila.n+" de "+d.plazo+(excedente>0?" + abono "+fmt(excedente):""),
+      detalle:"Pago "+fmt(monto)+" (cuota "+fila.n+" de "+d.plazo+")",
       snapDeudas:snap});
-    if(excedente>0)toast("Abono simulado aplicado: menos intereses y menos meses");
+    toast("Pago registrado: saldo actualizado");
   }
   S.pagos=S.pagos.concat(registros);
   guardar();rerender();
