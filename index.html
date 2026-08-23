@@ -447,7 +447,8 @@ function pbTasaImplicita(){
   let lo=0.0001,hi=0.05;
   const pmt=(s,i,n)=>s*i/(1-Math.pow(1+i,-n));
   for(let k=0;k<80;k++){const mid=(lo+hi)/2;
-    (pmt(saldo,mid,n)>DEUDAS.pb.cuota)?lo=mid:hi=mid;}
+    // Si pmt > cuota, la tasa es muy alta → bajar hi; si pmt < cuota, tasa muy baja → subir lo
+    (pmt(saldo,mid,n)>DEUDAS.pb.cuota)?hi=mid:lo=mid;}
   return(lo+hi)/2;
 }
 function pbCalendario(){
