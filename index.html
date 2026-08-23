@@ -337,7 +337,30 @@ function cargar(){
   try{const raw=localStorage.getItem(CLAVE_LS);
     if(!raw)return estadoInicial();
     const d=JSON.parse(raw);const base=estadoInicial();
-    return{...base,...d,deudas:{...base.deudas,...(d.deudas||{})},pagos:d.pagos||[]};
+    const merged={...base,...d,deudas:{...base.deudas,...(d.deudas||{})},pagos:d.pagos||[]};
+    // Coerce numeric fields (localStorage stores numbers as strings)
+    const num=(v)=>v===undefined||v===null||v===""?0:Number(v);
+    if(merged.deudas.bp){
+      merged.deudas.bp.saldo=num(merged.deudas.bp.saldo);
+      merged.deudas.bp.cuotaFija=num(merged.deudas.bp.cuotaFija);
+      merged.deudas.bp.cuotasPagadas=num(merged.deudas.bp.cuotasPagadas);
+      merged.deudas.bp.saldoInicialRef=num(merged.deudas.bp.saldoInicialRef);
+    }
+    if(merged.deudas.bg){
+      merged.deudas.bg.indiceActual=num(merged.deudas.bg.indiceActual);
+      if(merged.deudas.bg.exigibles){
+        Object.keys(merged.deudas.bg.exigibles).forEach(k=>{
+          merged.deudas.bg.exigibles[k]=num(merged.deudas.bg.exigibles[k]);
+        });
+      }
+    }
+    if(merged.deudas.pb){
+      merged.deudas.pb.saldo=num(merged.deudas.pb.saldo);
+      merged.deudas.pb.cuotasPagadas=num(merged.deudas.pb.cuotasPagadas);
+    }
+    if(merged.ingresosMensuales!==undefined) merged.ingresosMensuales=num(merged.ingresosMensuales);
+    if(merged.egresosPersonales!==undefined) merged.egresosPersonales=num(merged.egresosPersonales);
+    return merged;
   }catch(e){return estadoInicial();}
 }
 function guardar(){localStorage.setItem(CLAVE_LS,JSON.stringify(S));}
@@ -350,9 +373,10 @@ const mesClave=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
 const finMes=(y,m)=>new Date(y,m+1,0).getDate();
 function parseDMY(s){const[p1,p2,p3]=s.split("/").map(Number);return new Date(p3,p2-1,p1);}
 function animarNumero(el,destino,prefijo){
+  const val=Number(destino)||0;
   const inicio=0,t0=performance.now(),dur=850;
   function paso(t){const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
-    el.textContent=(prefijo||"")+fmt(destino*e).slice(1)===""?"":(prefijo||"")+(destino*e).toLocaleString("es-EC",{minimumFractionDigits:2,maximumFractionDigits:2});
+    el.textContent=(prefijo||"")+fmt(val*e).slice(1)===""?"":(prefijo||"")+(val*e).toLocaleString("es-EC",{minimumFractionDigits:2,maximumFractionDigits:2});
     if(p<1)requestAnimationFrame(paso);}
   requestAnimationFrame(paso);
 }
@@ -415,22 +439,30 @@ function bgEstado(){
 
 /* --- Produbanco (tabla francesa recalibrada a saldo y cuota reales) --- */
 function pbTasaImplicita(){
-  const st=S.deudas.pb,n=Math.max(1,DEUDAS.pb.plazo-st.cuotasPagadas);
+  const st=S.deudas.pb;
+  const saldo=Number(st.saldo)||0;
+  const pagadas=Number(st.cuotasPagadas)||0;
+  const n=Math.max(1,DEUDAS.pb.plazo-pagadas);
+  if(saldo<=0||n<=0)return 0.013; // fallback ~15.6% anual / 12
   let lo=0.0001,hi=0.05;
   const pmt=(s,i,n)=>s*i/(1-Math.pow(1+i,-n));
   for(let k=0;k<80;k++){const mid=(lo+hi)/2;
-    (pmt(st.saldo,mid,n)>DEUDAS.pb.cuota)?lo=mid:hi=mid;}
+    (pmt(saldo,mid,n)>DEUDAS.pb.cuota)?lo=mid:hi=mid;}
   return(lo+hi)/2;
 }
 function pbCalendario(){
-  const st=S.deudas.pb,i=pbTasaImplicita(),n=Math.max(0,DEUDAS.pb.plazo-st.cuotasPagadas);
-  let saldo=st.saldo;const filas=[];let d=new Date(HOY.getFullYear(),HOY.getMonth(),1);
+  const st=S.deudas.pb;
+  const saldo=Number(st.saldo)||0;
+  const pagadas=Number(st.cuotasPagadas)||0;
+  const i=pbTasaImplicita();
+  const n=Math.max(0,DEUDAS.pb.plazo-pagadas);
+  let s=saldo;const filas=[];let d=new Date(HOY.getFullYear(),HOY.getMonth(),1);
   for(let k=0;k<n;k++){
-    const int=saldo*i,cap=Math.min(saldo,DEUDAS.pb.cuota-int),tot=cap+int;
+    const int=s*i,cap=Math.min(s,DEUDAS.pb.cuota-int),tot=cap+int;
     const dia=Math.min(DEUDAS.pb.diaPago,finMes(d.getFullYear(),d.getMonth()));
-    filas.push({n:st.cuotasPagadas+k+1,fecha:new Date(d.getFullYear(),d.getMonth(),dia),
-                capital:cap,interes:int,total:tot,saldoTras:Math.max(0,saldo-cap)});
-    saldo-=cap;d.setMonth(d.getMonth()+1);
+    filas.push({n:pagadas+k+1,fecha:new Date(d.getFullYear(),d.getMonth(),dia),
+                capital:cap,interes:int,total:tot,saldoTras:Math.max(0,s-cap)});
+    s-=cap;d.setMonth(d.getMonth()+1);
   }
   return filas;
 }
@@ -443,7 +475,7 @@ function pbEstado(){
   else est="pendiente";
   return{estado:est,pagoMes,cal,cuotaActual:DEUDAS.pb.cuota,
          proxima:primera?formatoFecha(primera.fecha):"—",
-         saldo:S.deudas.pb.saldo,tasa:pbTasaImplicita()};
+         saldo:Number(S.deudas.pb.saldo)||0,tasa:pbTasaImplicita()};
 }
 function formatoFecha(d){return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
 
@@ -458,10 +490,13 @@ function render(){
   const eBP=bpEstado(),eBG=bgEstado(),ePB=pbEstado();
 
   /* Total general */
-  const total=eBP?S.deudas.bp.saldo:0,e_total=total+eBG.saldo+ePB.saldo;
+  const bpSaldo=Number(S.deudas.bp?.saldo)||0;
+  const bgSaldo=Number(eBG?.saldo)||0;
+  const pbSaldo=Number(ePB?.saldo)||0;
+  const e_total=bpSaldo+bgSaldo+pbSaldo;
   animarNumero(document.getElementById("totalGeneral"),e_total,"$");
   document.getElementById("totalDetalle").textContent=
-    "Pacífico "+fmt(S.deudas.bp.saldo)+" · Guayaquil "+fmt(eBG.saldo)+" · Produbanco "+fmt(ePB.saldo);
+    "Pacífico "+fmt(bpSaldo)+" · Guayaquil "+fmt(bgSaldo)+" · Produbanco "+fmt(pbSaldo);
 
   /* Alerta estar al día */
   const pendientesHoy=[];
@@ -557,7 +592,8 @@ function renderTarjetaBG(e){
 }
 function renderTarjetaPB(e){
   const d=DEUDAS.pb,st=S.deudas.pb,[cls,txt]=ESTADOS[e.estado];
-  const pct=Math.max(0,Math.min(100,(d.montoOriginal-st.saldo)/d.montoOriginal*100));
+  const saldo=Number(st.saldo)||0;
+  const pct=Math.max(0,Math.min(100,(d.montoOriginal-saldo)/d.montoOriginal*100));
   document.getElementById("deudas").insertAdjacentHTML("beforeend",
   '<div class="tarjeta" style="--c-acento:'+d.color+'" id="card-pb">'+
    '<div class="cab"><div><div class="banco"><span class="punto"></span>'+d.banco+'</div>'+
@@ -689,6 +725,8 @@ function renderGraficos(eBG,ePB){
   const bgP=[];for(let k=0;k<mesesN;k++){const i=S.deudas.bg.indiceActual+k;bgP.push(i<BG_TABLA.length?BG_TABLA[i][6]:0);}
   const pbP=[];{const cal=pbCalendario();for(let k=0;k<mesesN;k++){pbP.push(k<cal.length?Math.round(cal[k].saldoTras*100)/100:0);}}
   const totalM=labels.map((_,k)=>Math.round((bpP[k]+bgP[k]+pbP[k])*100)/100);
+  // Dona data with coerced values
+  const donutData=[bpSaldo,bgSaldo,pbSaldo];
 
   if(chEv)chEv.destroy();
   chEv=new Chart(document.getElementById("chEvolucion"),{
@@ -707,7 +745,7 @@ function renderGraficos(eBG,ePB){
   chDo=new Chart(document.getElementById("chDona"),{
     type:"doughnut",
     data:{labels:["Banco del Pacífico","Banco de Guayaquil","Produbanco"],
-      datasets:[{data:[S.deudas.bp.saldo,eBG.saldo,ePB.saldo],
+      datasets:[{data:donutData,
         backgroundColor:["#2563eb","#dc2626","#16a34a"],borderWidth:3,borderColor:"#fff",hoverOffset:10}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:"62%",animation:{animateRotate:true,duration:1000},
       plugins:{legend:{position:"bottom",labels:{usePointStyle:true,boxWidth:8}},
@@ -729,7 +767,7 @@ function renderGraficos(eBG,ePB){
 
 /* ---------- Animación de barras y contadores ---------- */
 function animarDetalles(estados){
-  const map={bp:estados.bp?S.deudas.bp.saldo:0,bg:estados.bg?estados.bg.saldo:0,pb:estados.pb?estados.pb.saldo:0};
+  const map={bp:estados.bp?Number(S.deudas.bp.saldo)||0:0,bg:estados.bg?Number(eBG?.saldo)||0:0,pb:estados.pb?Number(ePB?.saldo)||0:0};
   ["bp","bg","pb"].forEach(id=>{const el=document.getElementById("saldo-"+id);if(el)animarNumero(el,map[id],"$");});
   document.querySelectorAll(".relleno[data-pct]").forEach(r=>{setTimeout(()=>r.style.width=r.dataset.pct+"%",80);});
 }
@@ -790,6 +828,10 @@ function guardarConfig(){
   S.deudas.bp.saldo=parseFloat(document.getElementById("cfgSaldoBP").value)||S.deudas.bp.saldo;
   S.deudas.pb.saldo=parseFloat(document.getElementById("cfgSaldoPB").value)||S.deudas.pb.saldo;
   S.deudas.pb.cuotasPagadas=parseInt(document.getElementById("cfgPBpagadas").value)||S.deudas.pb.cuotasPagadas;
+  // Ensure stored as numbers
+  S.deudas.bp.saldo=Number(S.deudas.bp.saldo);
+  S.deudas.pb.saldo=Number(S.deudas.pb.saldo);
+  S.deudas.pb.cuotasPagadas=Number(S.deudas.pb.cuotasPagadas);
   const bgNuevo=parseFloat(document.getElementById("cfgSaldoBG").value);
   if(bgNuevo>0){/* sincroniza buscando la fila cuyo saldo coincida */
     let mejor=0,dif=Infinity;
