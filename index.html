@@ -167,7 +167,7 @@ footer{margin:22px 0 30px;font-size:.76rem;color:var(--gris);text-align:center;l
     <h3>🧾 Historial de pagos registrados</h3>
     <div style="overflow-x:auto">
       <table id="tablaHistorial">
-        <thead><tr><th>Fecha de registro</th><th>Banco</th><th>Cuota(s)</th><th>Monto</th><th>Estado</th></tr></thead>
+        <thead><tr><th>Fecha de registro</th><th>Banco</th><th>Cuota(s)</th><th>Monto</th><th>Estado</th><th style="width:48px">Acciones</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -328,7 +328,7 @@ function estadoInicial(){return{
   deudas:{
     bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
     bg:{indiceActual:11,exigibles:{"12":465.53}},
-    pb:{saldo:9280.25,cuotasPagadas:7}
+    pb:{saldo:9028.08,cuotasPagadas:8}
   },
   pagos:[]
 };}
@@ -611,11 +611,26 @@ function renderTarjetaPB(e){
    '<div><button class="link-tabla" onclick="verPlan(\'pb\')">Ver calendario de pagos</button></div>'+
   '</div>');
 }
+/* ---- Genera opciones de mes: últimos 12 + actuales + próximos 3 ---- */
+function generarOpcionesMes(){
+  const hoy=new Date(), out=[];
+  for(let i=-12;i<=3;i++){
+    const d=new Date(hoy.getFullYear(),hoy.getMonth()+i,1);
+    const clave=mesClave(d);
+    const label=MESES[d.getMonth()]+" "+d.getFullYear()+(i===0?" (actual)":"");
+    out.push({clave,label,actual:i===0});
+  }
+  return out;
+}
+const OPCIONES_MES=generarOpcionesMes();
+
 function cajaPago(id,estado,montoSugerido){
   const pagado=estado==="pagado"||estado==="atrasado";
+  const selectMes=OPCIONES_MES.map(o=>'<option value="'+o.clave+'" '+(o.actual?'selected':'')+'>'+o.label+'</option>').join("");
   return '<div class="pago-caja">'+
-   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(pagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado este mes</label>'+
-   '<div class="pago-fila">'+
+   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(pagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
+   '<div class="pago-fila" style="gap:8px;align-items:center;flex-wrap:wrap">'+
+    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff">'+selectMes+'</select>'+
     '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(pagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
     '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(pagado?"disabled":"")+'>Registrar</button>'+
    '</div>'+
@@ -629,34 +644,51 @@ function toggleValor(id){
 }
 
 /* ---------- Registro de pagos ---------- */
+/* Helper: ¿está atrasado el pago para el mes clave dado? */
+function estaAtrasado(mesClaveStr, diaVencimiento){
+  const [y,m]=mesClaveStr.split("-").map(Number);
+  const fechaVenc=new Date(y,m-1,diaVencimiento);
+  return HOY>fechaVenc;
+}
+
+/* Deep clone del estado de deudas para snapshot */
+function snapshotDeudas(){
+  return JSON.parse(JSON.stringify(S.deudas));
+}
+
 function registrarPago(id){
   const valEl=document.getElementById("val-"+id);
+  const mesEl=document.getElementById("mes-"+id);
   const monto=parseFloat(valEl.value);
+  const mc=mesEl?mesEl.value:mesClave(HOY); // mes seleccionado o actual
   if(!(monto>0)){toast("Ingresa un monto válido");return;}
-  const mc=mesClave(HOY),hoyDia=HOY.getDate();
+  /* Snapshot ANTES de modificar */
+  const snap=snapshotDeudas();
   let registros=[];
   if(id==="bp"){
     const d=DEUDAS.bp,st=S.deudas.bp;
-    const atrasado=hoyDia>d.diaLimite;
+    const atrasado=estaAtrasado(mc,d.diaLimite);
     const rest=Math.max(1,d.totalCuotas-st.cuotasPagadas);
     const excedente=Math.max(0,monto-st.cuotaFija);
     st.saldo=Math.max(0,st.saldo-st.saldo/rest-excedente);
     st.cuotasPagadas++;
     registros.push({deuda:"bp",mes:mc,fecha:HOY.toISOString(),monto,atrasado,
-      detalle:"Cuota "+st.cuotasPagadas+" de "+d.totalCuotas+(excedente>0?" + abono "+fmt(excedente):"")});
+      detalle:"Cuota "+st.cuotasPagadas+" de "+d.totalCuotas+(excedente>0?" + abono "+fmt(excedente):""),
+      snapDeudas:snap});
     if(excedente>0)toast("Abono aplicado: tu saldo bajó y la liberación se adelantó");
   }
   if(id==="bg"){
     const st=S.deudas.bg,e=bgEstado();
     const aPagar=e.vencidas.concat(e.delMes);
     if(!aPagar.length){toast("No hay cuotas pendientes este mes");return;}
-    const atrasado=hoyDia>DEUDAS.bg.diaPago;
+    const atrasado=estaAtrasado(mc,DEUDAS.bg.diaPago);
     let acumulado=0,pagas=0;
     for(const p of aPagar){
       const exigible=(st.exigibles&&st.exigibles[String(p.n)])||p.fila[5];
       if(monto+0.01>=acumulado+exigible){acumulado+=exigible;pagas++;
         registros.push({deuda:"bg",mes:mc,fecha:HOY.toISOString(),monto:exigible,atrasado:e.vencidas.length>0||atrasado,
-          detalle:"Cuota "+p.n+" de 60"+((st.exigibles&&st.exigibles[String(p.n)])?" (incluye mora)":"")});}
+          detalle:"Cuota "+p.n+" de 60"+((st.exigibles&&st.exigibles[String(p.n)])?" (incluye mora)":""),
+          snapDeudas:snap});}
     }
     if(pagas===0){toast("El monto no cubre ni la primera cuota pendiente ("+fmt(((st.exigibles&&st.exigibles[String(aPagar[0].n)])||aPagar[0].fila[5]))+")");return;}
     st.indiceActual+=pagas;
@@ -665,19 +697,36 @@ function registrarPago(id){
     toast(pagas+" cuota(s) registrada(s)"+(excedente>0.01?" + abono simulado":""));
   }
   if(id==="pb"){
-    const d=DEUDAS.pb,st=S.deudas.pb,e=pbEstado();
-    const fila=e.cal[0];
-    const atrasado=fila&&HOY>fila.fecha;
+    const d=DEUDAS.pb,st=S.deudas.pb;
+    /* Generar calendario y buscar la fila del mes seleccionado (mc) */
+    const cal=pbCalendario();
+    const [ySel,mSel]=mc.split("-").map(Number);
+    let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
+    if(!fila)fila=cal[0]; // fallback a la primera pendiente
+    const atrasado=estaAtrasado(mc,d.diaPago);
     const excedente=Math.max(0,monto-d.cuota);
     st.saldo=Math.max(0,st.saldo-fila.capital-excedente);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
-      detalle:"Cuota "+st.cuotasPagadas+" de "+d.plazo+(excedente>0?" + abono "+fmt(excedente):"")});
+      detalle:"Cuota "+fila.n+" de "+d.plazo+(excedente>0?" + abono "+fmt(excedente):""),
+      snapDeudas:snap});
     if(excedente>0)toast("Abono simulado aplicado: menos intereses y menos meses");
   }
   S.pagos=S.pagos.concat(registros);
   guardar();rerender();
   if(mesCompleto())confeti();
+}
+
+/* ---------- Deshacer pago seleccionado ---------- */
+function deshacerPago(index){
+  if(index<0 || index>=S.pagos.length){toast("Pago no encontrado");return;}
+  const pago=S.pagos[index];
+  if(!pago.snapDeudas){toast("Este pago no tiene snapshot (versión antigua). Usa Configuración → Restablecer.");return;}
+  if(!confirm("¿Deshacer este pago?\n"+DEUDAS[pago.deuda].banco+" — "+pago.detalle+"\nSe restaurará el estado anterior."))return;
+  S.deudas=pago.snapDeudas;
+  S.pagos.splice(index,1);
+  guardar();rerender();
+  toast("Pago deshecho. Estado restaurado.");
 }
 function abonarCapital(id,excedente,registros,mc){
   const st=S.deudas[id];
@@ -710,10 +759,21 @@ function mesCompleto(){
 /* ---------- Historial ---------- */
 function renderHistorial(){
   const tb=document.querySelector("#tablaHistorial tbody");
-  tb.innerHTML=S.pagos.slice().reverse().map(p=>{
+  const hayPagos=S.pagos.length>0;
+  const headerHtml=hayPagos?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:700;font-size:.85rem">Historial de pagos</span></div>':'';
+  tb.innerHTML=(hayPagos?S.pagos.slice().reverse().map((p,revIdx)=>{
+    const idx=S.pagos.length-1-revIdx; // índice en el array original
     const[cls,txt]=p.atrasado?["mal","Pago atrasado"]:["ok","A tiempo"];
-    return"<tr><td>"+new Date(p.fecha).toLocaleDateString("es-EC")+"</td><td>"+DEUDAS[p.deuda].banco+"</td><td>"+p.detalle+"</td><td>"+fmt(p.monto)+"</td><td><span class='mini-badge "+cls+"'>"+txt+"</span></td></tr>";
-  }).join("")||"<tr><td colspan='5' style='text-align:center;color:var(--gris)'>Aún no hay pagos registrados este ciclo.</td></tr>";
+    const tieneSnap=p.snapDeudas?"":" (sin snapshot)";
+    return"<tr><td>"+new Date(p.fecha).toLocaleDateString("es-EC")+"</td><td>"+DEUDAS[p.deuda].banco+"</td><td>"+p.detalle+"</td><td>"+fmt(p.monto)+"</td><td><span class='mini-badge "+cls+"'>"+txt+"</span></td><td style='text-align:center'><button class='btn-peligro' onclick='deshacerPago("+idx+")' style='font-size:.7rem;padding:4px 8px' title='Deshacer este pago"+tieneSnap+"'>↩</button></td></tr>";
+  }).join(""):"<tr><td colspan='6' style='text-align:center;color:var(--gris)'>Aún no hay pagos registrados.</td></tr>");
+  const panel=document.querySelector(".historial");
+  if(panel && !panel.querySelector(".historial-header")){
+    const h3=panel.querySelector("h3");
+    h3.insertAdjacentHTML("afterend",'<div class="historial-header">'+headerHtml+'</div>');
+  }else if(panel){
+    panel.querySelector(".historial-header").innerHTML=headerHtml;
+  }
 }
 
 /* ---------- Gráficos ---------- */
@@ -879,8 +939,27 @@ function rerender(){
   animarDetalles({bp:true,bg:true,pb:true});
 }
 
+/* ---------- Detección de cambio de mes ---------- */
+function verificarCambioMes(){
+  const mesActual=mesClave(HOY);
+  const ultimoMes=localStorage.getItem("dashfin_ultimoMes");
+  if(ultimoMes && ultimoMes!==mesActual){
+    toast("📅 Cambio de mes detectado: "+ultimoMes+" → "+mesActual+". Vista actualizada.");
+  }
+  localStorage.setItem("dashfin_ultimoMes",mesActual);
+}
+
+/* Verificación periódica (cada 60s) por si la página queda abierta al cambiar el día */
+setInterval(()=>{
+  const nuevoMes=mesClave(new Date());
+  if(nuevoMes!==mesClave(HOY)){
+    location.reload(); // recarga completa para actualizar HOY y toda la lógica
+  }
+},60000);
+
 /* ---------- Arranque ---------- */
 document.addEventListener("DOMContentLoaded",()=>{
+  verificarCambioMes();
   /* botón config del footer usa abrirConfig */
   const btnCfg=document.querySelector("footer button");
   btnCfg.removeAttribute("onclick");btnCfg.addEventListener("click",abrirConfig);
@@ -892,6 +971,7 @@ document.addEventListener("DOMContentLoaded",()=>{
 window.abrirConfig=abrirConfig;window.registrarPago=registrarPago;window.toggleValor=toggleValor;
 window.verTablaBG=verTablaBG;window.verPlan=verPlan;window.abrirModal=abrirModal;window.cerrarModal=cerrarModal;
 window.exportarJSON=exportarJSON;window.importarJSON=importarJSON;window.resetDatos=resetDatos;
+window.deshacerPago=deshacerPago;
 </script>
 </body>
 </html>
