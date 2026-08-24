@@ -642,14 +642,22 @@ function generarOpcionesMes(){
 const OPCIONES_MES=generarOpcionesMes();
 
 function cajaPago(id,estado,montoSugerido){
-  const pagado=estado==="pagado"||estado==="atrasado";
-  const selectMes=OPCIONES_MES.map(o=>'<option value="'+o.clave+'" '+(o.actual?'selected':'')+'>'+o.label+'</option>').join("");
+  /* Modelo por-mes: solo se bloquean los meses ya registrados. El primer mes sin pagar
+     (actual o futuro) queda seleccionado y con el botón habilitado, para poder registrar
+     los pagos de los meses siguientes uno tras otro. */
+  const mesesPagados=new Set(S.pagos.filter(p=>p.deuda===id).map(p=>p.mes));
+  const mcActual=mesClave(HOY);
+  const opciones=OPCIONES_MES.map(o=>({clave:o.clave,label:o.label+(mesesPagados.has(o.clave)?" (pagado)":""),actual:o.actual}));
+  const libre=opciones.find(o=>!mesesPagados.has(o.clave)&&o.clave>=mcActual)||opciones.find(o=>!mesesPagados.has(o.clave))||opciones[0];
+  const selClave=libre?libre.clave:mcActual;
+  const selPagado=mesesPagados.has(selClave);
+  const selectMes=opciones.map(o=>'<option value="'+o.clave+'"'+(o.clave===selClave?' selected':'')+(mesesPagados.has(o.clave)?' disabled':'')+'>'+o.label+'</option>').join("");
   return '<div class="pago-caja">'+
-   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(pagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
+   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(selPagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
    '<div class="pago-fila" style="gap:8px;align-items:center;flex-wrap:wrap">'+
-    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff">'+selectMes+'</select>'+
-    '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(pagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
-    '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(pagado?"disabled":"")+'>Registrar</button>'+
+    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff" onchange="cambioMesPago(\''+id+'\')">'+selectMes+'</select>'+
+    '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(selPagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
+    '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(selPagado?"disabled":"")+'>Registrar</button>'+
    '</div>'+
    '<div class="nota-mini" style="font-size:.72rem;color:var(--gris)">Si pagas más que la cuota, el excedente se aplica como abono a capital'+(id==="bp"?" (baja tu saldo directamente).":" (simulación: confirma el recálculo con el banco).")+'</div>'+
   '</div>';
@@ -658,6 +666,16 @@ function toggleValor(id){
   const chk=document.getElementById("chk-"+id);
   document.getElementById("val-"+id).disabled=!chk.checked;
   document.getElementById("btn-"+id).disabled=!chk.checked;
+}
+/* Al cambiar el mes en el select: si el mes elegido ya está registrado, bloquea los
+   controles; si es un mes libre, los deja habilitados para registrar el pago. */
+function cambioMesPago(id){
+  const sel=document.getElementById("mes-"+id);
+  const pagado=S.pagos.some(p=>p.deuda===id&&p.mes===sel.value);
+  const chk=document.getElementById("chk-"+id);
+  chk.checked=pagado;chk.disabled=pagado;
+  document.getElementById("val-"+id).disabled=pagado;
+  document.getElementById("btn-"+id).disabled=pagado;
 }
 
 /* ---------- Registro de pagos ---------- */
@@ -679,6 +697,7 @@ function registrarPago(id){
   const monto=parseFloat(valEl.value);
   const mc=mesEl?mesEl.value:mesClave(HOY); // mes seleccionado o actual
   if(!(monto>0)){toast("Ingresa un monto válido");return;}
+  if(S.pagos.some(p=>p.deuda===id&&p.mes===mc)){toast("Ese mes ya tiene un pago registrado para esta deuda");return;}
   /* Snapshot ANTES de modificar */
   const snap=snapshotDeudas();
   let registros=[];
@@ -696,8 +715,25 @@ function registrarPago(id){
   if(id==="bg"){
     const st=S.deudas.bg,e=bgEstado();
     const aPagar=e.vencidas.concat(e.delMes);
-    if(!aPagar.length){toast("No hay cuotas pendientes este mes");return;}
     const atrasado=estaAtrasado(mc,DEUDAS.bg.diaPago);
+    if(!aPagar.length){
+      /* Pago anticipado: el mes elegido ya no tiene cuota exigible porque los meses previos
+         fueron cubiertos. Se registra como la siguiente cuota pendiente de la tabla real. */
+      const pendientes=bgFilasPendientes();
+      if(!pendientes.length){toast("No hay cuotas pendientes de este crédito");return;}
+      const p0=pendientes[0];
+      const exigible0=(st.exigibles&&st.exigibles[String(p0.n)]!==undefined)?st.exigibles[String(p0.n)]:p0.fila[5];
+      if(monto+0.01<exigible0){toast("El monto no cubre la siguiente cuota ("+fmt(exigible0)+")");return;}
+      st.saldo=Math.max(0,st.saldo-monto);
+      st.indiceActual++;
+      registros.push({deuda:"bg",mes:mc,fecha:HOY.toISOString(),monto:exigible0,atrasado,
+        detalle:"Cuota "+p0.n+" de 60 (pago anticipado)"+((st.exigibles&&st.exigibles[String(p0.n)])?" (incluye mora)":""),
+        snapDeudas:snap});
+      const excedente0=monto-exigible0;
+      if(excedente0>0.01)abonarCapital("bg",excedente0,registros,mc);
+      toast("Cuota "+p0.n+" registrada por adelantado — saldo actualizado");
+      return;
+    }
     /* MODELO SIMPLE: resta directa del monto pagado al saldo */
     st.saldo=Math.max(0,st.saldo-monto);
     /* Avanzar índice en tabla real según cuotas cubiertas */
@@ -987,7 +1023,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   new MutationObserver(()=>{if(!mc.classList.contains("abierto"))guardarConfig._skip||null;}).observe(mc,{attributes:true});
   rerender();
 });
-window.abrirConfig=abrirConfig;window.registrarPago=registrarPago;window.toggleValor=toggleValor;
+window.abrirConfig=abrirConfig;window.registrarPago=registrarPago;window.toggleValor=toggleValor;window.cambioMesPago=cambioMesPago;
 window.verTablaBG=verTablaBG;window.verPlan=verPlan;window.abrirModal=abrirModal;window.cerrarModal=cerrarModal;
 window.exportarJSON=exportarJSON;window.importarJSON=importarJSON;window.resetDatos=resetDatos;
 window.deshacerPago=deshacerPago;
