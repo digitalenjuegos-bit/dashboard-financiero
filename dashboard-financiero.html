@@ -495,7 +495,7 @@ const DEUDAS={
 };
 
 /* ---- Estado persistente ---- */
-const CLAVE_LS="dashfin_v2";
+const CLAVE_LS="dashfin_v3";
 function estadoInicial(){return{
   ingresosMensuales:1341.70,
   egresosPersonales:100,
@@ -539,6 +539,13 @@ function cargar(){
     if(merged.deudas.pb){
       merged.deudas.pb.saldo=num(merged.deudas.pb.saldo);
       merged.deudas.pb.cuotasPagadas=num(merged.deudas.pb.cuotasPagadas);
+      // Validación de consistencia: el saldo debe ser el de la tabla real tras pagar N cuotas.
+      // PB_TABLA está indexada desde 0; el saldo tras pagar N cuotas es PB_TABLA[N][1].
+      // Esto corrige automáticamente datos corruptos guardados en localStorage.
+      const n=merged.deudas.pb.cuotasPagadas;
+      if(n>=0 && n<PB_TABLA.length){
+        merged.deudas.pb.saldo=PB_TABLA[n][1];
+      }
     }
     if(merged.ingresosMensuales!==undefined) merged.ingresosMensuales=num(merged.ingresosMensuales);
     if(merged.egresosPersonales!==undefined) merged.egresosPersonales=num(merged.egresosPersonales);
