@@ -123,6 +123,136 @@ footer{margin:22px 0 30px;font-size:.76rem;color:var(--gris);text-align:center;l
 @keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
 @media(max-width:640px){header{flex-direction:column;text-align:center}.total-caja{text-align:center}}
+
+/* ===== 3D EFFECTS — Enhanced Dashboard ===== */
+
+/* --- Tilt Cards: perspective + hover lift --- */
+.kpi,.tarjeta,.panel{
+  transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease;
+  transform-style:preserve-3d;
+  will-change:transform;
+  position:relative;
+}
+.kpi:hover,.tarjeta:hover{
+  box-shadow:0 25px 50px rgba(15,23,42,.13),0 0 0 1px rgba(99,102,241,.06);
+}
+.tarjeta:hover{
+  box-shadow:0 25px 60px rgba(15,23,42,.15),0 0 0 1px rgba(0,0,0,.04);
+}
+
+/* --- Glow border on debt cards --- */
+.tarjeta::after{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:19px;
+  padding:1.5px;
+  background:linear-gradient(135deg,var(--c-acento,#6366f1),transparent 60%);
+  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  opacity:0;
+  transition:opacity .35s ease;
+  pointer-events:none;
+  z-index:1;
+}
+.tarjeta:hover::after{opacity:.55}
+
+/* --- Header animated glow --- */
+header{overflow:hidden}
+header::after{
+  content:'';
+  position:absolute;
+  top:-60%;left:-30%;
+  width:160%;height:220%;
+  background:radial-gradient(ellipse at 30% 40%,rgba(255,255,255,.07) 0%,transparent 55%);
+  pointer-events:none;
+  animation:headerShimmer 10s ease-in-out infinite alternate;
+}
+@keyframes headerShimmer{
+  0%{transform:translate(0,0) rotate(0deg)}
+  100%{transform:translate(8%,-4%) rotate(2deg)}
+}
+
+/* --- Skeleton loading (shown briefly on init) --- */
+.skeleton-wrap{animation:fadeUp .4s ease}
+.skeleton-line{
+  background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);
+  background-size:200% 100%;
+  animation:skelPulse 1.4s ease-in-out infinite;
+  border-radius:8px;
+  height:18px;
+  margin-bottom:8px;
+}
+.skeleton-line.short{width:40%}
+.skeleton-line.medium{width:70%}
+@keyframes skelPulse{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+/* --- Chart panels subtle depth --- */
+.panel{transition:transform .25s ease,box-shadow .25s ease}
+.panel:hover{
+  transform:translateY(-3px);
+  box-shadow:0 20px 45px rgba(15,23,42,.11);
+}
+
+/* --- KPI number glow on hover --- */
+.kpi:hover .valor{text-shadow:0 0 20px rgba(99,102,241,.15)}
+
+/* --- Badge pulse enhancement --- */
+.badge.vencido{
+  animation:pulso 1.4s infinite,glowBadge 2s ease-in-out infinite;
+}
+@keyframes glowBadge{
+  0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}
+  50%{box-shadow:0 0 12px 2px rgba(220,38,38,.25)}
+}
+
+/* --- Button 3D press --- */
+.btn-registrar{
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+  box-shadow:0 4px 14px rgba(0,0,0,.18);
+}
+.btn-registrar:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 20px rgba(0,0,0,.22);
+}
+.btn-registrar:active{
+  transform:translateY(1px) scale(.97);
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+/* --- Progress bar glow --- */
+.barra .relleno{
+  position:relative;
+  overflow:visible;
+}
+.barra .relleno::after{
+  content:'';
+  position:absolute;
+  right:0;top:-2px;bottom:-2px;
+  width:8px;
+  border-radius:50%;
+  background:inherit;
+  box-shadow:0 0 10px 2px currentColor;
+  opacity:.6;
+}
+
+/* --- Reduced motion --- */
+@media(prefers-reduced-motion:reduce){
+  .kpi,.tarjeta,.panel{transform:none!important;transition:none!important}
+  header::after{animation:none}
+  .tarjeta::after{display:none}
+  .skeleton-line{animation:none}
+}
+
+/* --- Mobile: disable tilt, keep glow --- */
+@media(max-width:768px){
+  .kpi,.tarjeta,.panel{transform:none!important}
+  .tarjeta::after{display:none}
+}
 </style>
 </head>
 <body>
@@ -642,14 +772,22 @@ function generarOpcionesMes(){
 const OPCIONES_MES=generarOpcionesMes();
 
 function cajaPago(id,estado,montoSugerido){
-  const pagado=estado==="pagado"||estado==="atrasado";
-  const selectMes=OPCIONES_MES.map(o=>'<option value="'+o.clave+'" '+(o.actual?'selected':'')+'>'+o.label+'</option>').join("");
+  /* Modelo por-mes: solo se bloquean los meses ya registrados. El primer mes sin pagar
+     (actual o futuro) queda seleccionado y con el botón habilitado, para poder registrar
+     los pagos de los meses siguientes uno tras otro. */
+  const mesesPagados=new Set(S.pagos.filter(p=>p.deuda===id).map(p=>p.mes));
+  const mcActual=mesClave(HOY);
+  const opciones=OPCIONES_MES.map(o=>({clave:o.clave,label:o.label+(mesesPagados.has(o.clave)?" (pagado)":""),actual:o.actual}));
+  const libre=opciones.find(o=>!mesesPagados.has(o.clave)&&o.clave>=mcActual)||opciones.find(o=>!mesesPagados.has(o.clave))||opciones[0];
+  const selClave=libre?libre.clave:mcActual;
+  const selPagado=mesesPagados.has(selClave);
+  const selectMes=opciones.map(o=>'<option value="'+o.clave+'"'+(o.clave===selClave?' selected':'')+(mesesPagados.has(o.clave)?' disabled':'')+'>'+o.label+'</option>').join("");
   return '<div class="pago-caja">'+
-   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(pagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
+   '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(selPagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
    '<div class="pago-fila" style="gap:8px;align-items:center;flex-wrap:wrap">'+
-    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff">'+selectMes+'</select>'+
-    '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(pagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
-    '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(pagado?"disabled":"")+'>Registrar</button>'+
+    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff" onchange="cambioMesPago(\''+id+'\')">'+selectMes+'</select>'+
+    '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(selPagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
+    '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(selPagado?"disabled":"")+'>Registrar</button>'+
    '</div>'+
    '<div class="nota-mini" style="font-size:.72rem;color:var(--gris)">Si pagas más que la cuota, el excedente se aplica como abono a capital'+(id==="bp"?" (baja tu saldo directamente).":" (simulación: confirma el recálculo con el banco).")+'</div>'+
   '</div>';
@@ -658,6 +796,16 @@ function toggleValor(id){
   const chk=document.getElementById("chk-"+id);
   document.getElementById("val-"+id).disabled=!chk.checked;
   document.getElementById("btn-"+id).disabled=!chk.checked;
+}
+/* Al cambiar el mes en el select: si el mes elegido ya está registrado, bloquea los
+   controles; si es un mes libre, los deja habilitados para registrar el pago. */
+function cambioMesPago(id){
+  const sel=document.getElementById("mes-"+id);
+  const pagado=S.pagos.some(p=>p.deuda===id&&p.mes===sel.value);
+  const chk=document.getElementById("chk-"+id);
+  chk.checked=pagado;chk.disabled=pagado;
+  document.getElementById("val-"+id).disabled=pagado;
+  document.getElementById("btn-"+id).disabled=pagado;
 }
 
 /* ---------- Registro de pagos ---------- */
@@ -679,6 +827,7 @@ function registrarPago(id){
   const monto=parseFloat(valEl.value);
   const mc=mesEl?mesEl.value:mesClave(HOY); // mes seleccionado o actual
   if(!(monto>0)){toast("Ingresa un monto válido");return;}
+  if(S.pagos.some(p=>p.deuda===id&&p.mes===mc)){toast("Ese mes ya tiene un pago registrado para esta deuda");return;}
   /* Snapshot ANTES de modificar */
   const snap=snapshotDeudas();
   let registros=[];
@@ -696,8 +845,25 @@ function registrarPago(id){
   if(id==="bg"){
     const st=S.deudas.bg,e=bgEstado();
     const aPagar=e.vencidas.concat(e.delMes);
-    if(!aPagar.length){toast("No hay cuotas pendientes este mes");return;}
     const atrasado=estaAtrasado(mc,DEUDAS.bg.diaPago);
+    if(!aPagar.length){
+      /* Pago anticipado: el mes elegido ya no tiene cuota exigible porque los meses previos
+         fueron cubiertos. Se registra como la siguiente cuota pendiente de la tabla real. */
+      const pendientes=bgFilasPendientes();
+      if(!pendientes.length){toast("No hay cuotas pendientes de este crédito");return;}
+      const p0=pendientes[0];
+      const exigible0=(st.exigibles&&st.exigibles[String(p0.n)]!==undefined)?st.exigibles[String(p0.n)]:p0.fila[5];
+      if(monto+0.01<exigible0){toast("El monto no cubre la siguiente cuota ("+fmt(exigible0)+")");return;}
+      st.saldo=Math.max(0,st.saldo-monto);
+      st.indiceActual++;
+      registros.push({deuda:"bg",mes:mc,fecha:HOY.toISOString(),monto:exigible0,atrasado,
+        detalle:"Cuota "+p0.n+" de 60 (pago anticipado)"+((st.exigibles&&st.exigibles[String(p0.n)])?" (incluye mora)":""),
+        snapDeudas:snap});
+      const excedente0=monto-exigible0;
+      if(excedente0>0.01)abonarCapital("bg",excedente0,registros,mc);
+      toast("Cuota "+p0.n+" registrada por adelantado — saldo actualizado");
+      return;
+    }
     /* MODELO SIMPLE: resta directa del monto pagado al saldo */
     st.saldo=Math.max(0,st.saldo-monto);
     /* Avanzar índice en tabla real según cuotas cubiertas */
@@ -723,8 +889,12 @@ function registrarPago(id){
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
     if(!fila)fila=cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
-    /* MODELO SIMPLE: resta directa del monto pagado al saldo */
-    st.saldo=Math.max(0,st.saldo-monto);
+    /* CORRECCIÓN: Calcular interés y capital según tabla francesa
+       Solo la porción de capital reduce el saldo; el interés se paga al banco */
+    const tasa=pbTasaImplicita();
+    const interes=st.saldo*tasa;
+    const capital=Math.max(0,Math.min(st.saldo,monto-interes));
+    st.saldo=Math.max(0,st.saldo-capital);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
       detalle:"Pago "+fmt(monto)+" (cuota "+fila.n+" de "+d.plazo+")",
@@ -987,10 +1157,72 @@ document.addEventListener("DOMContentLoaded",()=>{
   new MutationObserver(()=>{if(!mc.classList.contains("abierto"))guardarConfig._skip||null;}).observe(mc,{attributes:true});
   rerender();
 });
-window.abrirConfig=abrirConfig;window.registrarPago=registrarPago;window.toggleValor=toggleValor;
+window.abrirConfig=abrirConfig;window.registrarPago=registrarPago;window.toggleValor=toggleValor;window.cambioMesPago=cambioMesPago;
 window.verTablaBG=verTablaBG;window.verPlan=verPlan;window.abrirModal=abrirModal;window.cerrarModal=cerrarModal;
 window.exportarJSON=exportarJSON;window.importarJSON=importarJSON;window.resetDatos=resetDatos;
 window.deshacerPago=deshacerPago;
+
+/* ===== 3D TILT EFFECT — Progressive Enhancement ===== */
+(function(){
+  const seen=new WeakSet();
+  function attach(el){
+    if(seen.has(el))return;
+    seen.add(el);
+    el.addEventListener('pointermove',function(e){
+      const r=this.getBoundingClientRect();
+      const rx=((e.clientY-r.top)/r.height-.5)*-5;
+      const ry=((e.clientX-r.left)/r.width-.5)*5;
+      this.style.transform='perspective(800px) rotateX('+rx+'deg) rotateY('+ry+'deg) scale(1.015)';
+    });
+    el.addEventListener('pointerleave',function(){
+      this.style.transition='transform .4s cubic-bezier(.22,1,.36,1)';
+      this.style.transform='';
+      setTimeout(()=>{this.style.transition=''},400);
+    });
+  }
+  function scan(){
+    document.querySelectorAll('.kpi:not([data-tilt]),.tarjeta:not([data-tilt]),.panel:not(.ancho):not([data-tilt])').forEach(el=>{
+      el.setAttribute('data-tilt','');
+      attach(el);
+    });
+  }
+  /* Wait for main render, then scan + observe */
+  function init(){
+    setTimeout(scan,250);
+    const t=document.getElementById('deudas');
+    if(t)new MutationObserver(scan).observe(t,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
+  else init();
+})();
+
+/* ===== SKELETON LOADING — Flash on init ===== */
+(function(){
+  const d=document.getElementById('deudas');
+  if(!d)return;
+  /* Show skeleton only if cards haven't rendered yet */
+  if(!d.querySelector('.tarjeta')){
+    d.innerHTML=
+      '<div class="tarjeta skeleton-wrap" style="--c-acento:#94a3b8;pointer-events:none">'+
+        '<div class="skeleton-line medium"></div>'+
+        '<div class="skeleton-line short"></div>'+
+        '<div class="skeleton-line"></div>'+
+        '<div class="skeleton-line medium"></div>'+
+      '</div>'+
+      '<div class="tarjeta skeleton-wrap" style="--c-acento:#94a3b8;pointer-events:none">'+
+        '<div class="skeleton-line medium"></div>'+
+        '<div class="skeleton-line short"></div>'+
+        '<div class="skeleton-line"></div>'+
+        '<div class="skeleton-line medium"></div>'+
+      '</div>'+
+      '<div class="tarjeta skeleton-wrap" style="--c-acento:#94a3b8;pointer-events:none">'+
+        '<div class="skeleton-line medium"></div>'+
+        '<div class="skeleton-line short"></div>'+
+        '<div class="skeleton-line"></div>'+
+        '<div class="skeleton-line medium"></div>'+
+      '</div>';
+  }
+})();
 </script>
 </body>
 </html>
