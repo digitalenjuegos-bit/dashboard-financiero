@@ -104,6 +104,8 @@ tr:hover td{background:#f8fafc}
 .tabla-am th{position:sticky;top:0}
 tr.fila-actual td{background:#fef9c3 !important;font-weight:700}
 tr.fila-pagada td{color:#94a3b8}
+.est-pagada{color:#16a34a;font-weight:700}
+.est-pendiente{color:#64748b}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
 .campo label{font-size:.76rem;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:5px}
 .campo input{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:.95rem;font-weight:600;outline:none}
@@ -644,18 +646,19 @@ function pbCalendario(){
   const st=S.deudas.pb;
   const pagadas=Number(st.cuotasPagadas)||0;
   const filas=[];
-  for(let k=pagadas;k<PB_TABLA.length;k++){
+  for(let k=0;k<PB_TABLA.length;k++){
     const r=PB_TABLA[k];
     const [fecha,saldo,interes,capital,cuota]=r;
-    const [dd,mm,aa]=fecha.split("/").map(Number);
+    const [mm,dd,aa]=fecha.split("/").map(Number);
     filas.push({n:k+1,fecha:new Date(aa,mm-1,dd),
                 capital:capital,interes:interes,total:cuota,
-                saldoTras:Math.max(0,saldo-capital)});
+                saldoTras:Math.max(0,saldo-capital),
+                pagada:k<pagadas});
   }
   return filas;
 }
 function pbEstado(){
-  const mc=mesClave(HOY),cal=pbCalendario(),primera=cal[0];
+  const mc=mesClave(HOY),cal=pbCalendario(),primera=cal.find(f=>!f.pagada);
   const pagoMes=S.pagos.find(p=>p.deuda==="pb"&&p.mes===mc);
   let est;
   if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
@@ -935,7 +938,7 @@ function registrarPago(id){
     const cal=pbCalendario();
     const [ySel,mSel]=mc.split("-").map(Number);
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
-    if(!fila)fila=cal[0]; // fallback a la primera pendiente
+    if(!fila)fila=cal.find(f=>!f.pagada)||cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
     /* Usar el CAPITAL REAL de la tabla de amortización de Produbanco.
        Solo la porción de capital reduce el saldo; el interés se paga al banco. */
@@ -1018,7 +1021,7 @@ function renderGraficos(eBG,ePB){
   for(let k=0;k<mesesN;k++){labels.push(MESES[(f.getMonth()+k)%12].slice(0,3)+" "+String((f.getFullYear()+Math.floor((f.getMonth()+k)/12))%100).padStart(2,"0"));}
   const bpP=bpProyeccion(mesesN);
   const bgP=[];for(let k=0;k<mesesN;k++){const i=S.deudas.bg.indiceActual+k;bgP.push(i<BG_TABLA.length?BG_TABLA[i][6]:0);}
-  const pbP=[];{const cal=pbCalendario();for(let k=0;k<mesesN;k++){pbP.push(k<cal.length?Math.round(cal[k].saldoTras*100)/100:0);}}
+  const pbP=[];{const cal=pbCalendario();const pend=cal.filter(f=>!f.pagada);for(let k=0;k<mesesN;k++){pbP.push(k<pend.length?Math.round(pend[k].saldoTras*100)/100:0);}}
   const totalM=labels.map((_,k)=>Math.round((bpP[k]+bgP[k]+pbP[k])*100)/100);
   // Dona: valores con coerción, usando SOLO variables en scope (S y los parámetros eBG/ePB)
   const donutData=[Number(S.deudas.bp?.saldo)||0,Number(eBG?.saldo)||0,Number(ePB?.saldo)||0];
@@ -1091,10 +1094,11 @@ function verPlan(id){
   const esBP=id==="bp";
   document.getElementById("tablaTitulo").textContent=(esBP?"Banco del Pacífico — Plan de pago estimado":"Produbanco — Calendario de pagos");
   document.getElementById("tablaSub").textContent=esBP?"Modelo proporcional sobre tu saldo real (el banco aplica su propia tabla del diferido)":"Recalibrado a tu saldo y cuota reales";
-  let html="<thead><tr><th>N.</th><th>Fecha aprox.</th><th>Cuota</th><th>Saldo tras pago</th></tr></thead><tbody>";
+  let html="<thead><tr><th>N.</th><th>Fecha aprox.</th><th>Cuota</th><th>Saldo tras pago</th><th>Estado</th></tr></thead><tbody>";
   filas.forEach((f,i)=>{
     const fecha=esBP?f.fecha:f.fecha;
-    html+="<tr class='"+(i===0?"fila-actual":"")+"'><td>"+f.n+"</td><td>"+formatoFecha(fecha)+"</td><td>"+fmt(f.total!==undefined?f.total:f.cuota)+"</td><td>"+fmt(f.saldoTras)+"</td></tr>";
+    const estado=esBP?"":(f.pagada?'<span class="est-pagada">Pagada</span>':'<span class="est-pendiente">Pendiente</span>');
+    html+="<tr class='"+(i===0&&!esBP&&!f.pagada?"fila-actual":"")+(f.pagada?" fila-pagada":"")+"'><td>"+f.n+"</td><td>"+formatoFecha(fecha)+"</td><td>"+fmt(f.total!==undefined?f.total:f.cuota)+"</td><td>"+fmt(f.saldoTras)+"</td><td>"+estado+"</td></tr>";
   });
   document.getElementById("tablaAmBody").innerHTML=html+"</tbody>";
   abrirModal("modalTabla");
