@@ -724,8 +724,12 @@ function registrarPago(id){
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
     if(!fila)fila=cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
-    /* MODELO SIMPLE: resta directa del monto pagado al saldo */
-    st.saldo=Math.max(0,st.saldo-monto);
+    /* CORRECCIÓN: Calcular interés y capital según tabla francesa
+       Solo la porción de capital reduce el saldo; el interés se paga al banco */
+    const tasa=pbTasaImplicita();
+    const interes=st.saldo*tasa;
+    const capital=Math.max(0,Math.min(st.saldo,monto-interes));
+    st.saldo=Math.max(0,st.saldo-capital);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
       detalle:"Pago "+fmt(monto)+" (cuota "+fila.n+" de "+d.plazo+")",
