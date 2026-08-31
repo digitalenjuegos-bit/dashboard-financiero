@@ -441,6 +441,49 @@ const BG_TABLA=[
 ["27/07/2030",409.31,5.68,415.05,9.31,424.30,0.00]
 ];
 
+/* ---- Tabla REAL Produbanco (crédito de consumo, 36 cuotas, PDF oficial) ----
+   Formato: [fecha, saldo capital, interés, capital, cuota mensual]
+   El interés se calcula sobre días reales, por eso la tasa mensual varía.
+   El "saldo capital" de cada fila es el saldo ANTES de pagar esa cuota. */
+const PB_TABLA=[
+["02/02/2026",10745.06,153.65,223.18,376.83],
+["03/02/2026",10521.88,127.67,249.16,376.83],
+["03/31/2026",10272.72,129.09,247.74,376.83],
+["04/30/2026",10024.98,130.32,246.51,376.83],
+["06/01/2026",9778.47,135.59,241.24,376.83],
+["06/30/2026",9537.23,119.85,256.98,376.83],
+["07/31/2026",9280.25,124.66,252.17,376.83],
+["08/31/2026",9028.08,121.28,255.55,376.83],
+["09/30/2026",8772.53,114.04,262.79,376.83],
+["11/04/2026",8509.74,129.06,247.77,376.83],
+["11/30/2026",8261.97,93.11,283.75,376.83],
+["12/31/2026",7978.22,107.16,269.66,376.83],
+["02/01/2027",7708.56,106.89,269.94,376.83],
+["03/01/2027",7438.62,90.26,286.57,376.83],
+["03/31/2027",7152.05,92.98,283.85,376.83],
+["05/03/2027",6868.20,98.22,278.61,376.83],
+["05/31/2027",6589.59,80.22,296.88,376.83],
+["06/30/2027",6292.71,81.81,295.02,376.83],
+["08/02/2027",5997.69,85.77,291.06,376.83],
+["08/31/2027",5706.63,71.71,305.12,376.83],
+["09/30/2027",5401.51,70.22,306.61,376.83],
+["11/03/2027",5094.90,75.06,301.77,376.83],
+["11/30/2027",4793.13,56.08,320.75,376.83],
+["01/03/2028",4472.38,65.89,310.94,376.83],
+["01/31/2028",4161.44,50.49,326.34,376.83],
+["03/01/2028",3835.10,49.86,326.97,376.83],
+["03/31/2028",3508.13,45.61,331.22,376.83],
+["05/02/2028",3176.91,44.05,332.78,376.83],
+["05/31/2028",2844.13,35.74,341.09,376.83],
+["06/30/2028",2503.04,32.54,344.29,376.83],
+["07/31/2028",2158.75,29.00,347.83,376.83],
+["08/31/2028",1810.92,24.33,352.50,376.83],
+["10/02/2028",1458.42,20.22,356.61,376.83],
+["10/31/2028",1101.81,13.85,362.98,376.83],
+["11/30/2028",738.83,9.60,367.23,376.83],
+["01/02/2029",371.60,5.31,371.60,376.91]
+];
+
 /* ---- Definición de deudas ---- */
 const DEUDAS={
   bp:{id:"bp",banco:"Banco del Pacífico",producto:"Consolidado préstamo + tarjeta (diferido fijo)",tipo:"tarjeta",
@@ -459,7 +502,7 @@ function estadoInicial(){return{
   deudas:{
     bp:{saldo:12590.50,cuotaFija:267.88,cuotasPagadas:13,saldoInicialRef:16072.88},
     bg:{indiceActual:11,exigibles:{"12":465.53}},
-    pb:{saldo:9028.08,cuotasPagadas:8}
+    pb:{saldo:8772.53,cuotasPagadas:8}
   },
   pagos:[
     {deuda:"bp",mes:"2026-08",fecha:"2026-08-18T00:00:00.000Z",monto:267.88,atrasado:false,
@@ -467,7 +510,7 @@ function estadoInicial(){return{
      snapDeudas:{
        bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
        bg:{indiceActual:11,exigibles:{"12":465.53}},
-       pb:{saldo:9028.08,cuotasPagadas:8}
+       pb:{saldo:8772.53,cuotasPagadas:8}
      }}
   ]
 };}
@@ -592,17 +635,15 @@ function pbTasaImplicita(){
 }
 function pbCalendario(){
   const st=S.deudas.pb;
-  const saldo=Number(st.saldo)||0;
   const pagadas=Number(st.cuotasPagadas)||0;
-  const i=pbTasaImplicita();
-  const n=Math.max(0,DEUDAS.pb.plazo-pagadas);
-  let s=saldo;const filas=[];let d=new Date(HOY.getFullYear(),HOY.getMonth(),1);
-  for(let k=0;k<n;k++){
-    const int=s*i,cap=Math.min(s,DEUDAS.pb.cuota-int),tot=cap+int;
-    const dia=Math.min(DEUDAS.pb.diaPago,finMes(d.getFullYear(),d.getMonth()));
-    filas.push({n:pagadas+k+1,fecha:new Date(d.getFullYear(),d.getMonth(),dia),
-                capital:cap,interes:int,total:tot,saldoTras:Math.max(0,s-cap)});
-    s-=cap;d.setMonth(d.getMonth()+1);
+  const filas=[];
+  for(let k=pagadas;k<PB_TABLA.length;k++){
+    const r=PB_TABLA[k];
+    const [fecha,saldo,interes,capital,cuota]=r;
+    const [dd,mm,aa]=fecha.split("/").map(Number);
+    filas.push({n:k+1,fecha:new Date(aa,mm-1,dd),
+                capital:capital,interes:interes,total:cuota,
+                saldoTras:Math.max(0,saldo-capital)});
   }
   return filas;
 }
@@ -750,7 +791,7 @@ function renderTarjetaPB(e){
     '<span class="k">Cuota fija</span><span class="v">'+fmt(d.cuota)+'</span>'+
     '<span class="k">Vence</span><span class="v">día '+d.diaPago+' (último hábil)</span>'+
     '<span class="k">Cuotas</span><span class="v">'+st.cuotasPagadas+' / '+d.plazo+' pagadas</span>'+
-    '<span class="k">Tasa implícita</span><span class="v">'+(e.tasa*100).toFixed(2)+'% mensual</span>'+
+    '<span class="k">Próxima cuota</span><span class="v">'+(e.proxima||"—")+'</span>'+
    '</div>'+
    '<div class="prog-caja"><div class="txt"><span>Capital amortizado</span><span>'+pct.toFixed(1)+'%</span></div>'+
    '<div class="barra"><div class="relleno" data-pct="'+pct+'"></div></div></div>'+
@@ -883,17 +924,15 @@ function registrarPago(id){
   }
   if(id==="pb"){
     const d=DEUDAS.pb,st=S.deudas.pb;
-    /* Generar calendario y buscar la fila del mes seleccionado (mc) */
+    /* Generar calendario desde la tabla REAL y buscar la fila del mes seleccionado (mc) */
     const cal=pbCalendario();
     const [ySel,mSel]=mc.split("-").map(Number);
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
     if(!fila)fila=cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
-    /* CORRECCIÓN: Calcular interés y capital según tabla francesa
-       Solo la porción de capital reduce el saldo; el interés se paga al banco */
-    const tasa=pbTasaImplicita();
-    const interes=st.saldo*tasa;
-    const capital=Math.max(0,Math.min(st.saldo,monto-interes));
+    /* Usar el CAPITAL REAL de la tabla de amortización de Produbanco.
+       Solo la porción de capital reduce el saldo; el interés se paga al banco. */
+    const capital=fila.capital;
     st.saldo=Math.max(0,st.saldo-capital);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
