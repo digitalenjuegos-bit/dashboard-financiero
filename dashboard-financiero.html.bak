@@ -580,7 +580,7 @@ function estadoInicial(){return{
   egresosPersonales:100,
   deudas:{
     bp:{saldo:12590.50,cuotaFija:267.88,cuotasPagadas:13,saldoInicialRef:16072.88},
-    bg:{indiceActual:11,exigibles:{"12":488.37}},
+    bg:{indiceActual:11,exigibles:{"12":465.53}},
     pb:{saldo:8772.53,cuotasPagadas:8}
   },
   pagos:[
@@ -588,7 +588,7 @@ function estadoInicial(){return{
      detalle:"Pago $267.88 (cuota 13 de 60)",
      snapDeudas:{
        bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
-       bg:{indiceActual:11,exigibles:{"12":488.37}},
+       bg:{indiceActual:11,exigibles:{"12":465.53}},
        pb:{saldo:8772.53,cuotasPagadas:8}
      }}
   ]
