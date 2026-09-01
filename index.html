@@ -584,12 +584,12 @@ function bpEstado(){
   let est;
   if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
   else est=hoy>d.diaLimite?"vencido":"pendiente";
-  const restantes=Math.max(0,d.totalCuotas-d.cuotasPagadas);
+  const restantes=Math.max(0,DEUDAS.bp.totalCuotas-d.cuotasPagadas);
   return{estado:est,pagoMes,restantes,vence:"día "+d.diaLimite,corte:"día "+d.diaCorte,
          cuotaActual:d.cuotaFija};
 }
 function bpProyeccion(meses){
-  const d=S.deudas.bp;let saldo=d.saldo,rest=Math.max(1,d.totalCuotas-d.cuotasPagadas);
+  const d=S.deudas.bp;let saldo=d.saldo,rest=Math.max(1,DEUDAS.bp.totalCuotas-d.cuotasPagadas);
   const out=[];
   for(let k=0;k<meses;k++){
     if(rest<=0||saldo<=0.01){out.push(0);continue;}
@@ -1110,10 +1110,11 @@ function verPlan(id){
   abrirModal("modalTabla");
 }
 function planBP(){
-  const st=S.deudas.bp;let saldo=st.saldo,rest=Math.max(1,st.totalCuotas-st.cuotasPagadas);
+  const st=S.deudas.bp;let saldo=st.saldo,rest=Math.max(1,DEUDAS.bp.totalCuotas-st.cuotasPagadas);
   const out=[];const f=new Date(HOY.getFullYear(),HOY.getMonth(),DEUDAS.bp.diaLimite);
-  for(let k=0;k<rest&&saldo>0.01;k++){
-    const cap=saldo/rest;saldo-=cap;f.setMonth(k>0?f.getMonth()+1:f.getMonth());
+  const total=rest;
+  for(let k=0;k<total&&saldo>0.01;k++){
+    const cap=saldo/rest;saldo-=cap;rest--;f.setMonth(k>0?f.getMonth()+1:f.getMonth());
     out.push({n:st.cuotasPagadas+k+1,fecha:new Date(f),total:st.cuotaFija,saldoTras:Math.max(0,saldo)});
   }
   return out;
