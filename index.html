@@ -660,8 +660,10 @@ function pbCalendario(){
 function pbEstado(){
   const mc=mesClave(HOY),cal=pbCalendario(),primera=cal.find(f=>!f.pagada);
   const pagoMes=S.pagos.find(p=>p.deuda==="pb"&&p.mes===mc);
+  const cuotaMes=cal.find(f=>mesClave(f.fecha)===mc);
   let est;
-  if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
+  if(cuotaMes&&cuotaMes.pagada)est="pagado";
+  else if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
   else if(primera&&HOY>primera.fecha)est="vencido";
   else est="pendiente";
   return{estado:est,pagoMes,cal,cuotaActual:DEUDAS.pb.cuota,
