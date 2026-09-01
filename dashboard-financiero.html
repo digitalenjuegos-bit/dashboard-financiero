@@ -829,6 +829,10 @@ function cajaPago(id,estado,montoSugerido){
      (actual o futuro) queda seleccionado y con el botón habilitado, para poder registrar
      los pagos de los meses siguientes uno tras otro. */
   const mesesPagados=new Set(S.pagos.filter(p=>p.deuda===id).map(p=>p.mes));
+  /* Para Produbanco, las cuotas ya pagadas vía cuotasPagadas (estado inicial) también
+     cuentan como meses pagados, aunque no tengan registro en S.pagos. Así el selector
+     no deja agosto 2026 como "libre" si la cuota 8 ya está pagada. */
+  if(id==="pb"){const cal=pbCalendario();cal.filter(f=>f.pagada).forEach(f=>mesesPagados.add(mesClave(f.fecha)));}
   const mcActual=mesClave(HOY);
   const opciones=OPCIONES_MES.map(o=>({clave:o.clave,label:o.label+(mesesPagados.has(o.clave)?" (pagado)":""),actual:o.actual}));
   const libre=opciones.find(o=>!mesesPagados.has(o.clave)&&o.clave>=mcActual)||opciones.find(o=>!mesesPagados.has(o.clave))||opciones[0];
