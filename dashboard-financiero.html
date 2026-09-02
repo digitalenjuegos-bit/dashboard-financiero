@@ -10,19 +10,73 @@
   --tinta:#1e293b; --gris:#64748b; --fondo:#f1f5f9;
   --ok:#16a34a; --warn:#f59e0b; --bad:#dc2626;
   --sombra:0 10px 30px rgba(15,23,42,.08);
+  /* Superficies (para tema claro y oscuro) */
+  --superficie:#ffffff; --superficie-2:#f8fafc;
+  --borde:#e2e8f0; --borde-suave:#f1f5f9;
+  --texto-suave:#94a3b8;
+  --modal-fondo:rgba(15,23,42,.55);
+  --toast-bg:#1e293b; --toast-txt:#ffffff;
+  --header-grad:linear-gradient(135deg,#1e3a8a 0%,#3730a3 55%,#6d28d9 100%);
+  --header-txt:#ffffff;
+  --barra-fondo:#e2e8f0;
+  --obs-bg:#fffbeb; --obs-borde:#fde68a; --obs-txt:#92400e;
+  --badge-pend-bg:#fef3c7; --badge-pend-txt:#92400e;
+  --badge-pag-bg:#dcfce7; --badge-pag-txt:#166534;
+  --badge-atr-bg:#ffedd5; --badge-atr-txt:#9a3412;
+  --badge-ven-bg:#fee2e2; --badge-ven-txt:#991b1b;
+  --btn-sec-bg:#eef2ff; --btn-sec-txt:#4338ca;
+  --btn-peligro-bg:#fee2e2; --btn-peligro-txt:#991b1b;
+  --fila-actual-bg:#fef9c3;
+  --fila-pagada-txt:#94a3b8;
+  --cerrar-bg:#f1f5f9;
+  --select-bg:#ffffff;
+  --input-bg:#ffffff;
+  --input-txt:#1e293b;
+  --donut-border:#ffffff;
+}
+/* ===== TEMA OSCURO ===== */
+html[data-theme="dark"]{
+  --tinta:#e2e8f0; --gris:#94a3b8; --fondo:#0f172a;
+  --sombra:0 10px 30px rgba(0,0,0,.4);
+  --superficie:#1e293b; --superficie-2:#0f172a;
+  --borde:#334155; --borde-suave:#1e293b;
+  --texto-suave:#64748b;
+  --modal-fondo:rgba(2,6,23,.7);
+  --toast-bg:#e2e8f0; --toast-txt:#0f172a;
+  --header-grad:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#2e1065 100%);
+  --header-txt:#f1f5f9;
+  --barra-fondo:#334155;
+  --obs-bg:#422006; --obs-borde:#78350f; --obs-txt:#fde68a;
+  --badge-pend-bg:#78350f; --badge-pend-txt:#fde68a;
+  --badge-pag-bg:#14532d; --badge-pag-txt:#bbf7d0;
+  --badge-atr-bg:#7c2d12; --badge-atr-txt:#fed7aa;
+  --badge-ven-bg:#7f1d1d; --badge-ven-txt:#fecaca;
+  --btn-sec-bg:#312e81; --btn-sec-txt:#c7d2fe;
+  --btn-peligro-bg:#7f1d1d; --btn-peligro-txt:#fecaca;
+  --fila-actual-bg:#3f3f00;
+  --fila-pagada-txt:#64748b;
+  --cerrar-bg:#334155;
+  --select-bg:#1e293b;
+  --input-bg:#0f172a;
+  --input-txt:#e2e8f0;
+  --donut-border:#1e293b;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--fondo);color:var(--tinta);min-height:100vh}
 .wrap{max-width:1180px;margin:0 auto;padding:18px}
 
 /* ===== HEADER ===== */
-header{background:linear-gradient(135deg,#1e3a8a 0%,#3730a3 55%,#6d28d9 100%);color:#fff;border-radius:20px;padding:26px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:var(--sombra)}
+header{background:var(--header-grad);color:var(--header-txt);border-radius:20px;padding:26px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;box-shadow:var(--sombra)}
 header h1{font-size:1.55rem;font-weight:800;letter-spacing:.2px}
 header .sub{opacity:.85;font-size:.92rem;margin-top:4px}
 .total-caja{text-align:right}
 .total-caja .etq{font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;opacity:.75}
 .total-caja .valor{font-size:2.1rem;font-weight:800;font-variant-numeric:tabular-nums}
 .total-caja .detalle{font-size:.78rem;opacity:.75}
+.header-derecha{display:flex;align-items:center;gap:14px}
+.btn-tema{background:rgba(255,255,255,.16);color:var(--header-txt);border:1px solid rgba(255,255,255,.25);border-radius:12px;width:44px;height:44px;font-size:1.15rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s,transform .15s;flex-shrink:0}
+.btn-tema:hover{background:rgba(255,255,255,.28)}
+.btn-tema:active{transform:scale(.94)}
 
 /* ===== ALERTA ESTAR AL DIA ===== */
 .alerta{margin-top:14px;border-radius:14px;padding:14px 20px;display:none;align-items:center;gap:14px;flex-wrap:wrap;color:#fff;background:linear-gradient(120deg,#b91c1c,#ef4444);box-shadow:var(--somber, var(--sombra));animation:fadeUp .5s ease}
@@ -35,24 +89,24 @@ header .sub{opacity:.85;font-size:.92rem;margin-top:4px}
 
 /* ===== KPIs ===== */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:16px}
-.kpi{background:#fff;border-radius:16px;padding:16px 18px;box-shadow:var(--sombra);animation:fadeUp .5s ease}
+.kpi{background:var(--superficie);border-radius:16px;padding:16px 18px;box-shadow:var(--sombra);animation:fadeUp .5s ease}
 .kpi .etq{font-size:.76rem;text-transform:uppercase;letter-spacing:1px;color:var(--gris);font-weight:700}
 .kpi .valor{font-size:1.5rem;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
 .kpi .nota{font-size:.76rem;color:var(--gris);margin-top:4px}
 
 /* ===== TARJETAS DE DEUDA ===== */
 .deudas{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px;margin-top:16px}
-.tarjeta{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--sombra);border-top:5px solid var(--c-acento,#333);animation:fadeUp .55s ease;display:flex;flex-direction:column;gap:12px}
+.tarjeta{background:var(--superficie);border-radius:18px;padding:20px;box-shadow:var(--sombra);border-top:5px solid var(--c-acento,#333);animation:fadeUp .55s ease;display:flex;flex-direction:column;gap:12px}
 .tarjeta .cab{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .tarjeta .banco{font-weight:800;font-size:1.06rem;display:flex;align-items:center;gap:8px}
 .logo-banco{height:28px;width:auto;object-fit:contain;filter:drop-shadow(0 1px 2px rgba(0,0,0,.1))}
 .punto{width:11px;height:11px;border-radius:50%;background:var(--c-acento);display:inline-block}
 .tarjeta .prod{font-size:.78rem;color:var(--gris);margin-top:3px;line-height:1.35}
 .badge{border-radius:999px;padding:4px 12px;font-size:.74rem;font-weight:800;white-space:nowrap}
-.badge.pendiente{background:#fef3c7;color:#92400e}
-.badge.pagado{background:#dcfce7;color:#166534}
-.badge.atrasado{background:#ffedd5;color:#9a3412}
-.badge.vencido{background:#fee2e2;color:#991b1b;animation:pulso 1.4s infinite}
+.badge.pendiente{background:var(--badge-pend-bg);color:var(--badge-pend-txt)}
+.badge.pagado{background:var(--badge-pag-bg);color:var(--badge-pag-txt)}
+.badge.atrasado{background:var(--badge-atr-bg);color:var(--badge-atr-txt)}
+.badge.vencido{background:var(--badge-ven-bg);color:var(--badge-ven-txt);animation:pulso 1.4s infinite}
 .saldo-linea{display:flex;align-items:baseline;gap:8px}
 .saldo-linea .monto{font-size:1.85rem;font-weight:800;font-variant-numeric:tabular-nums}
 .saldo-linea .lbl{font-size:.78rem;color:var(--gris)}
@@ -61,25 +115,27 @@ header .sub{opacity:.85;font-size:.92rem;margin-top:4px}
 .info-grid .v{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .prog-caja{margin-top:2px}
 .prog-caja .txt{display:flex;justify-content:space-between;font-size:.76rem;color:var(--gris);margin-bottom:5px}
-.barra{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.barra{height:10px;background:var(--barra-fondo);border-radius:999px;overflow:hidden}
 .barra .relleno{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--c-acento),#7c3aed);width:0;transition:width 1.1s cubic-bezier(.22,1,.36,1)}
-.pago-caja{border-top:1px dashed #e2e8f0;padding-top:12px;display:flex;flex-direction:column;gap:9px}
+.pago-caja{border-top:1px dashed var(--borde);padding-top:12px;display:flex;flex-direction:column;gap:9px}
 .pago-fila{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .check-caja{display:flex;align-items:center;gap:8px;font-size:.88rem;font-weight:600;cursor:pointer;user-select:none}
 input[type=checkbox]{width:19px;height:19px;accent-color:var(--c-acento);cursor:pointer}
-input.valor{flex:1;min-width:110px;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;outline:none;transition:border .2s}
+input.valor{flex:1;min-width:110px;border:1.5px solid var(--borde);border-radius:10px;padding:9px 12px;font-size:.95rem;font-weight:700;font-variant-numeric:tabular-nums;outline:none;transition:border .2s;background:var(--input-bg);color:var(--input-txt)}
 input.valor:focus{border-color:var(--c-acento)}
 button{border:none;border-radius:10px;padding:10px 16px;font-weight:800;font-size:.86rem;cursor:pointer;transition:transform .15s,filter .2s,box-shadow .2s}
 button:active{transform:scale(.96)}
-.btn-registrar{background:var(--c-acento);color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.btn-registrar:hover{filter:brightness(1.12)}
-.btn-registrar:disabled{background:#cbd5e1;cursor:not-allowed;box-shadow:none}
+.btn-registrar{background:var(--c-acento);color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.18);transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+.btn-registrar:hover{filter:brightness(1.12);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,.22)}
+.btn-registrar:active{transform:translateY(1px) scale(.97);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.btn-registrar:disabled{background:var(--barra-fondo);cursor:not-allowed;box-shadow:none;color:var(--texto-suave);transform:none}
 .link-tabla{font-size:.8rem;color:var(--c-acento);font-weight:700;cursor:pointer;text-decoration:underline;background:none;padding:0}
-.obs{font-size:.78rem;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:8px 10px;line-height:1.4}
+.obs{font-size:.78rem;background:var(--obs-bg);border:1px solid var(--obs-borde);color:var(--obs-txt);border-radius:10px;padding:8px 10px;line-height:1.4}
 
 /* ===== GRÁFICOS ===== */
 .graficos{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-top:16px}
-.panel{background:#fff;border-radius:18px;padding:20px;box-shadow:var(--sombra);animation:fadeUp .6s ease}
+.panel{background:var(--superficie);border-radius:18px;padding:20px;box-shadow:var(--sombra);animation:fadeUp .6s ease;transition:transform .25s ease,box-shadow .25s ease}
+.panel:hover{transform:translateY(-3px);box-shadow:0 20px 45px rgba(15,23,42,.11)}
 .panel h3{font-size:.98rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .panel .alto{position:relative;height:280px}
 .panel.ancho{grid-column:1/-1}
@@ -87,33 +143,35 @@ button:active{transform:scale(.96)}
 /* ===== HISTORIAL ===== */
 .historial{margin-top:16px}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
-th{background:#f8fafc;text-align:left;padding:10px 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;color:var(--gris);border-bottom:2px solid #e2e8f0}
-td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-variant-numeric:tabular-nums}
-tr:hover td{background:#f8fafc}
+th{background:var(--superficie-2);text-align:left;padding:10px 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;color:var(--gris);border-bottom:2px solid var(--borde)}
+td{padding:10px 12px;border-bottom:1px solid var(--borde-suave);font-variant-numeric:tabular-nums}
+tr:hover td{background:var(--superficie-2)}
 .mini-badge{border-radius:999px;padding:2px 10px;font-size:.72rem;font-weight:700}
-.mini-badge.ok{background:#dcfce7;color:#166534}
-.mini-badge.mal{background:#ffedd5;color:#9a3412}
+.mini-badge.ok{background:var(--badge-pag-bg);color:var(--badge-pag-txt)}
+.mini-badge.mal{background:var(--badge-atr-bg);color:var(--badge-atr-txt)}
 
 /* ===== MODALES ===== */
-.modal-fondo{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;backdrop-filter:blur(3px)}
+.modal-fondo{position:fixed;inset:0;background:var(--modal-fondo);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;backdrop-filter:blur(3px)}
 .modal-fondo.abierto{display:flex}
-.modal{background:#fff;border-radius:18px;max-width:860px;width:100%;max-height:88vh;overflow:auto;padding:24px;animation:pop .25s ease}
+.modal{background:var(--superficie);border-radius:18px;max-width:860px;width:100%;max-height:88vh;overflow:auto;padding:24px;animation:pop .25s ease}
 .modal h2{font-size:1.15rem;margin-bottom:4px}
 .modal .submodal{font-size:.82rem;color:var(--gris);margin-bottom:14px}
-.cerrar{float:right;background:#f1f5f9;color:var(--tinta);border-radius:50%;width:34px;height:34px;font-size:1rem;padding:0}
+.cerrar{float:right;background:var(--cerrar-bg);color:var(--tinta);border-radius:50%;width:34px;height:34px;font-size:1rem;padding:0}
 .tabla-am th{position:sticky;top:0}
-tr.fila-actual td{background:#fef9c3 !important;font-weight:700}
-tr.fila-pagada td{color:#94a3b8}
+tr.fila-actual td{background:var(--fila-actual-bg) !important;font-weight:700}
+tr.fila-pagada td{color:var(--fila-pagada-txt)}
+.est-pagada{color:var(--ok);font-weight:700}
+.est-pendiente{color:var(--gris)}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
 .campo label{font-size:.76rem;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:5px}
-.campo input{width:100%;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px;font-size:.95rem;font-weight:600;outline:none}
+.campo input{width:100%;border:1.5px solid var(--borde);border-radius:10px;padding:9px 12px;font-size:.95rem;font-weight:600;outline:none;background:var(--input-bg);color:var(--input-txt)}
 .campo input:focus{border-color:#6366f1}
 .acciones-config{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
-.btn-sec{background:#eef2ff;color:#4338ca}
-.btn-peligro{background:#fee2e2;color:#991b1b}
+.btn-sec{background:var(--btn-sec-bg);color:var(--btn-sec-txt)}
+.btn-peligro{background:var(--btn-peligro-bg);color:var(--btn-peligro-txt)}
 
 /* ===== TOAST / CONFETTI ===== */
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:13px 22px;border-radius:12px;font-weight:700;font-size:.9rem;opacity:0;transition:all .35s cubic-bezier(.22,1,.36,1);z-index:99;max-width:90vw;text-align:center}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--toast-bg);color:var(--toast-txt);padding:13px 22px;border-radius:12px;font-weight:700;font-size:.9rem;opacity:0;transition:all .35s cubic-bezier(.22,1,.36,1);z-index:99;max-width:90vw;text-align:center}
 #toast.visible{opacity:1;transform:translateX(-50%) translateY(0)}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:98}
 
@@ -122,7 +180,7 @@ footer{margin:22px 0 30px;font-size:.76rem;color:var(--gris);text-align:center;l
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 @keyframes pulso{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
 @keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
-@media(max-width:640px){header{flex-direction:column;text-align:center}.total-caja{text-align:center}}
+@media(max-width:640px){header{flex-direction:column;text-align:center}.total-caja{text-align:center}.header-derecha{flex-direction:column;align-items:center;gap:10px}}
 
 /* ===== 3D EFFECTS — Enhanced Dashboard ===== */
 
@@ -177,7 +235,7 @@ header::after{
 /* --- Skeleton loading (shown briefly on init) --- */
 .skeleton-wrap{animation:fadeUp .4s ease}
 .skeleton-line{
-  background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);
+  background:linear-gradient(90deg,var(--barra-fondo) 25%,var(--borde-suave) 50%,var(--barra-fondo) 75%);
   background-size:200% 100%;
   animation:skelPulse 1.4s ease-in-out infinite;
   border-radius:8px;
@@ -191,13 +249,6 @@ header::after{
   100%{background-position:-200% 0}
 }
 
-/* --- Chart panels subtle depth --- */
-.panel{transition:transform .25s ease,box-shadow .25s ease}
-.panel:hover{
-  transform:translateY(-3px);
-  box-shadow:0 20px 45px rgba(15,23,42,.11);
-}
-
 /* --- KPI number glow on hover --- */
 .kpi:hover .valor{text-shadow:0 0 20px rgba(99,102,241,.15)}
 
@@ -208,20 +259,6 @@ header::after{
 @keyframes glowBadge{
   0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,0)}
   50%{box-shadow:0 0 12px 2px rgba(220,38,38,.25)}
-}
-
-/* --- Button 3D press --- */
-.btn-registrar{
-  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
-  box-shadow:0 4px 14px rgba(0,0,0,.18);
-}
-.btn-registrar:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 20px rgba(0,0,0,.22);
-}
-.btn-registrar:active{
-  transform:translateY(1px) scale(.97);
-  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
 
 /* --- Progress bar glow --- */
@@ -253,6 +290,43 @@ header::after{
   .kpi,.tarjeta,.panel{transform:none!important}
   .tarjeta::after{display:none}
 }
+
+/* ===== MEJORAS UI (M4-M7) ===== */
+
+/* M4: caja de pago apilada en móvil */
+@media(max-width:560px){
+  .pago-fila{flex-direction:column;align-items:stretch;gap:8px}
+  .pago-fila select.valor,.pago-fila input.valor,.pago-fila .btn-registrar{width:100%;min-width:0}
+  .pago-fila .btn-registrar{padding:12px 16px}
+}
+
+/* M5: tarjeta de próximos vencimientos */
+.proximos{margin-top:16px}
+.proximos .panel{padding:16px 20px}
+.proximos h3{font-size:.95rem;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.proximos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.prox-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--superficie-2);border:1px solid var(--borde-suave);border-radius:12px;padding:10px 14px}
+.prox-item .p-izq{display:flex;align-items:center;gap:10px;min-width:0}
+.prox-item .p-nombre{font-weight:700;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prox-item .p-fecha{font-size:.74rem;color:var(--gris)}
+.prox-item .p-monto{font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prox-item .punto{width:10px;height:10px;flex-shrink:0}
+.prox-item.vencido{border-color:var(--bad);background:var(--badge-ven-bg)}
+.prox-item.vencido .p-fecha{color:var(--badge-ven-txt);font-weight:700}
+
+/* M6: indicador de scroll horizontal en tablas */
+.tabla-scroll{position:relative;overflow-x:auto}
+.tabla-scroll::after{content:'';position:absolute;top:0;right:0;bottom:0;width:28px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--superficie));opacity:0;transition:opacity .25s ease}
+.tabla-scroll.can-scroll::after{opacity:1}
+.tabla-scroll .scroll-hint{position:absolute;top:50%;right:6px;transform:translateY(-50%);font-size:1.1rem;color:var(--gris);pointer-events:none;opacity:.8;animation:hintNudge 1.6s ease-in-out infinite}
+@keyframes hintNudge{0%,100%{transform:translateY(-50%) translateX(0)}50%{transform:translateY(-50%) translateX(-3px)}}
+
+/* M7: desactivar tilt sobre controles interactivos */
+.kpi[data-tilt],.tarjeta[data-tilt],.panel[data-tilt]{transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease}
+.kpi[data-tilt]:hover,.tarjeta[data-tilt]:hover,.panel[data-tilt]:hover{transform:none!important}
+.kpi[data-tilt] *,.tarjeta[data-tilt] *,.panel[data-tilt] *{pointer-events:auto}
+
 </style>
 </head>
 <body>
@@ -263,10 +337,13 @@ header::after{
       <h1>Dashboard Financiero</h1>
       <div class="sub" id="subFecha"></div>
     </div>
-    <div class="total-caja">
-      <div class="etq">Deuda total consolidada</div>
-      <div class="valor" id="totalGeneral">$0.00</div>
-      <div class="detalle" id="totalDetalle"></div>
+    <div class="header-derecha">
+      <div class="total-caja">
+        <div class="etq">Deuda total consolidada</div>
+        <div class="valor" id="totalGeneral">$0.00</div>
+        <div class="detalle" id="totalDetalle"></div>
+      </div>
+      <button class="btn-tema" id="btnTema" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">🌙</button>
     </div>
   </header>
 
@@ -288,6 +365,8 @@ header::after{
 
   <div class="deudas" id="deudas"></div>
 
+  <div class="proximos" id="proximos"></div>
+
   <div class="graficos">
     <div class="panel ancho"><h3>📊 Evolución del saldo por banco — próximos 12 meses</h3><div class="alto"><canvas id="chEvolucion"></canvas></div></div>
     <div class="panel"><h3>🥧 Distribución actual de la deuda</h3><div class="alto"><canvas id="chDona"></canvas></div></div>
@@ -296,7 +375,7 @@ header::after{
 
   <div class="panel historial">
     <h3>🧾 Historial de pagos registrados</h3>
-    <div style="overflow-x:auto">
+    <div class="tabla-scroll" id="scrollHistorial">
       <table id="tablaHistorial">
         <thead><tr><th>Fecha de registro</th><th>Banco</th><th>Cuota(s)</th><th>Monto</th><th>Estado</th><th style="width:48px">Acciones</th></tr></thead>
         <tbody></tbody>
@@ -313,22 +392,22 @@ header::after{
 </div>
 
 <!-- MODAL TABLA AMORTIZACIÓN -->
-<div class="modal-fondo" id="modalTabla">
+<div class="modal-fondo" id="modalTabla" role="dialog" aria-modal="true" aria-labelledby="tablaTitulo">
   <div class="modal">
-    <button class="cerrar" onclick="cerrarModal('modalTabla')">✕</button>
+    <button class="cerrar" onclick="cerrarModal('modalTabla')" aria-label="Cerrar tabla">✕</button>
     <h2 id="tablaTitulo"></h2>
     <div class="submodal" id="tablaSub"></div>
-    <div style="overflow-x:auto;max-height:60vh">
+    <div class="tabla-scroll" style="max-height:60vh" id="scrollTabla">
       <table class="tabla-am" id="tablaAmBody"></table>
     </div>
   </div>
 </div>
 
 <!-- MODAL CONFIGURACIÓN -->
-<div class="modal-fondo" id="modalConfig">
+<div class="modal-fondo" id="modalConfig" role="dialog" aria-modal="true" aria-labelledby="modalConfigTitulo">
   <div class="modal" style="max-width:560px">
-    <button class="cerrar" onclick="cerrarModal('modalConfig')">✕</button>
-    <h2>⚙️ Configuración</h2>
+    <button class="cerrar" onclick="cerrarModal('modalConfig')" aria-label="Cerrar configuración">✕</button>
+    <h2 id="modalConfigTitulo">⚙️ Configuración</h2>
     <div class="submodal">Los cambios se guardan automáticamente en este navegador.</div>
     <div class="config-grid">
       <div class="campo"><label>Ingreso mensual neto (USD)</label><input type="number" step="0.01" id="cfgIngresos"></div>
@@ -441,6 +520,49 @@ const BG_TABLA=[
 ["27/07/2030",409.31,5.68,415.05,9.31,424.30,0.00]
 ];
 
+/* ---- Tabla REAL Produbanco (crédito de consumo, 36 cuotas, PDF oficial) ----
+   Formato: [fecha, saldo capital, interés, capital, cuota mensual]
+   El interés se calcula sobre días reales, por eso la tasa mensual varía.
+   El "saldo capital" de cada fila es el saldo ANTES de pagar esa cuota. */
+const PB_TABLA=[
+["02/02/2026",10745.06,153.65,223.18,376.83],
+["03/02/2026",10521.88,127.67,249.16,376.83],
+["03/31/2026",10272.72,129.09,247.74,376.83],
+["04/30/2026",10024.98,130.32,246.51,376.83],
+["06/01/2026",9778.47,135.59,241.24,376.83],
+["06/30/2026",9537.23,119.85,256.98,376.83],
+["07/31/2026",9280.25,124.66,252.17,376.83],
+["08/31/2026",9028.08,121.28,255.55,376.83],
+["09/30/2026",8772.53,114.04,262.79,376.83],
+["11/04/2026",8509.74,129.06,247.77,376.83],
+["11/30/2026",8261.97,93.11,283.75,376.83],
+["12/31/2026",7978.22,107.16,269.66,376.83],
+["02/01/2027",7708.56,106.89,269.94,376.83],
+["03/01/2027",7438.62,90.26,286.57,376.83],
+["03/31/2027",7152.05,92.98,283.85,376.83],
+["05/03/2027",6868.20,98.22,278.61,376.83],
+["05/31/2027",6589.59,80.22,296.88,376.83],
+["06/30/2027",6292.71,81.81,295.02,376.83],
+["08/02/2027",5997.69,85.77,291.06,376.83],
+["08/31/2027",5706.63,71.71,305.12,376.83],
+["09/30/2027",5401.51,70.22,306.61,376.83],
+["11/03/2027",5094.90,75.06,301.77,376.83],
+["11/30/2027",4793.13,56.08,320.75,376.83],
+["01/03/2028",4472.38,65.89,310.94,376.83],
+["01/31/2028",4161.44,50.49,326.34,376.83],
+["03/01/2028",3835.10,49.86,326.97,376.83],
+["03/31/2028",3508.13,45.61,331.22,376.83],
+["05/02/2028",3176.91,44.05,332.78,376.83],
+["05/31/2028",2844.13,35.74,341.09,376.83],
+["06/30/2028",2503.04,32.54,344.29,376.83],
+["07/31/2028",2158.75,29.00,347.83,376.83],
+["08/31/2028",1810.92,24.33,352.50,376.83],
+["10/02/2028",1458.42,20.22,356.61,376.83],
+["10/31/2028",1101.81,13.85,362.98,376.83],
+["11/30/2028",738.83,9.60,367.23,376.83],
+["01/02/2029",371.60,5.31,371.60,376.91]
+];
+
 /* ---- Definición de deudas ---- */
 const DEUDAS={
   bp:{id:"bp",banco:"Banco del Pacífico",producto:"Consolidado préstamo + tarjeta (diferido fijo)",tipo:"tarjeta",
@@ -452,22 +574,22 @@ const DEUDAS={
 };
 
 /* ---- Estado persistente ---- */
-const CLAVE_LS="dashfin_v1";
+const CLAVE_LS="dashfin_v3";
 function estadoInicial(){return{
   ingresosMensuales:1341.70,
   egresosPersonales:100,
   deudas:{
     bp:{saldo:12590.50,cuotaFija:267.88,cuotasPagadas:13,saldoInicialRef:16072.88},
-    bg:{indiceActual:11,exigibles:{"12":465.53}},
-    pb:{saldo:9028.08,cuotasPagadas:8}
+    bg:{indiceActual:11,exigibles:{"12":488.37}},
+    pb:{saldo:8772.53,cuotasPagadas:8}
   },
   pagos:[
     {deuda:"bp",mes:"2026-08",fecha:"2026-08-18T00:00:00.000Z",monto:267.88,atrasado:false,
      detalle:"Pago $267.88 (cuota 13 de 60)",
      snapDeudas:{
        bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
-       bg:{indiceActual:11,exigibles:{"12":465.53}},
-       pb:{saldo:9028.08,cuotasPagadas:8}
+       bg:{indiceActual:11,exigibles:{"12":488.37}},
+       pb:{saldo:8772.53,cuotasPagadas:8}
      }}
   ]
 };}
@@ -496,6 +618,13 @@ function cargar(){
     if(merged.deudas.pb){
       merged.deudas.pb.saldo=num(merged.deudas.pb.saldo);
       merged.deudas.pb.cuotasPagadas=num(merged.deudas.pb.cuotasPagadas);
+      // Validación de consistencia: el saldo debe ser el de la tabla real tras pagar N cuotas.
+      // PB_TABLA está indexada desde 0; el saldo tras pagar N cuotas es PB_TABLA[N][1].
+      // Esto corrige automáticamente datos corruptos guardados en localStorage.
+      const n=merged.deudas.pb.cuotasPagadas;
+      if(n>=0 && n<PB_TABLA.length){
+        merged.deudas.pb.saldo=PB_TABLA[n][1];
+      }
     }
     if(merged.ingresosMensuales!==undefined) merged.ingresosMensuales=num(merged.ingresosMensuales);
     if(merged.egresosPersonales!==undefined) merged.egresosPersonales=num(merged.egresosPersonales);
@@ -532,12 +661,12 @@ function bpEstado(){
   let est;
   if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
   else est=hoy>d.diaLimite?"vencido":"pendiente";
-  const restantes=Math.max(0,d.totalCuotas-d.cuotasPagadas);
+  const restantes=Math.max(0,DEUDAS.bp.totalCuotas-d.cuotasPagadas);
   return{estado:est,pagoMes,restantes,vence:"día "+d.diaLimite,corte:"día "+d.diaCorte,
          cuotaActual:d.cuotaFija};
 }
 function bpProyeccion(meses){
-  const d=S.deudas.bp;let saldo=d.saldo,rest=Math.max(1,d.totalCuotas-d.cuotasPagadas);
+  const d=S.deudas.bp;let saldo=d.saldo,rest=Math.max(1,DEUDAS.bp.totalCuotas-d.cuotasPagadas);
   const out=[];
   for(let k=0;k<meses;k++){
     if(rest<=0||saldo<=0.01){out.push(0);continue;}
@@ -592,25 +721,26 @@ function pbTasaImplicita(){
 }
 function pbCalendario(){
   const st=S.deudas.pb;
-  const saldo=Number(st.saldo)||0;
   const pagadas=Number(st.cuotasPagadas)||0;
-  const i=pbTasaImplicita();
-  const n=Math.max(0,DEUDAS.pb.plazo-pagadas);
-  let s=saldo;const filas=[];let d=new Date(HOY.getFullYear(),HOY.getMonth(),1);
-  for(let k=0;k<n;k++){
-    const int=s*i,cap=Math.min(s,DEUDAS.pb.cuota-int),tot=cap+int;
-    const dia=Math.min(DEUDAS.pb.diaPago,finMes(d.getFullYear(),d.getMonth()));
-    filas.push({n:pagadas+k+1,fecha:new Date(d.getFullYear(),d.getMonth(),dia),
-                capital:cap,interes:int,total:tot,saldoTras:Math.max(0,s-cap)});
-    s-=cap;d.setMonth(d.getMonth()+1);
+  const filas=[];
+  for(let k=0;k<PB_TABLA.length;k++){
+    const r=PB_TABLA[k];
+    const [fecha,saldo,interes,capital,cuota]=r;
+    const [mm,dd,aa]=fecha.split("/").map(Number);
+    filas.push({n:k+1,fecha:new Date(aa,mm-1,dd),
+                capital:capital,interes:interes,total:cuota,
+                saldoTras:Math.max(0,saldo-capital),
+                pagada:k<pagadas});
   }
   return filas;
 }
 function pbEstado(){
-  const mc=mesClave(HOY),cal=pbCalendario(),primera=cal[0];
+  const mc=mesClave(HOY),cal=pbCalendario(),primera=cal.find(f=>!f.pagada);
   const pagoMes=S.pagos.find(p=>p.deuda==="pb"&&p.mes===mc);
+  const cuotaMes=cal.find(f=>mesClave(f.fecha)===mc);
   let est;
-  if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
+  if(cuotaMes&&cuotaMes.pagada)est="pagado";
+  else if(pagoMes)est=pagoMes.atrasado?"atrasado":"pagado";
   else if(primera&&HOY>primera.fecha)est="vencido";
   else est="pendiente";
   return{estado:est,pagoMes,cal,cuotaActual:DEUDAS.pb.cuota,
@@ -668,7 +798,7 @@ function render(){
   mEl.style.color=margen<0?"var(--bad)":(margen<150?"var(--warn)":"var(--ok)");
 
   renderTarjetaBP(eBP);renderTarjetaBG(eBG);renderTarjetaPB(ePB);
-  renderHistorial();renderGraficos(eBG,ePB);
+  renderHistorial();renderGraficos(eBG,ePB);renderProximos();actualizarScrollHints();
 }
 function proxBGCuota(){
   const p=bgFilasPendientes();return p.length?p[0].fila[5]:0;
@@ -750,7 +880,7 @@ function renderTarjetaPB(e){
     '<span class="k">Cuota fija</span><span class="v">'+fmt(d.cuota)+'</span>'+
     '<span class="k">Vence</span><span class="v">día '+d.diaPago+' (último hábil)</span>'+
     '<span class="k">Cuotas</span><span class="v">'+st.cuotasPagadas+' / '+d.plazo+' pagadas</span>'+
-    '<span class="k">Tasa implícita</span><span class="v">'+(e.tasa*100).toFixed(2)+'% mensual</span>'+
+    '<span class="k">Próxima cuota</span><span class="v">'+(e.proxima||"—")+'</span>'+
    '</div>'+
    '<div class="prog-caja"><div class="txt"><span>Capital amortizado</span><span>'+pct.toFixed(1)+'%</span></div>'+
    '<div class="barra"><div class="relleno" data-pct="'+pct+'"></div></div></div>'+
@@ -776,6 +906,10 @@ function cajaPago(id,estado,montoSugerido){
      (actual o futuro) queda seleccionado y con el botón habilitado, para poder registrar
      los pagos de los meses siguientes uno tras otro. */
   const mesesPagados=new Set(S.pagos.filter(p=>p.deuda===id).map(p=>p.mes));
+  /* Para Produbanco, las cuotas ya pagadas vía cuotasPagadas (estado inicial) también
+     cuentan como meses pagados, aunque no tengan registro en S.pagos. Así el selector
+     no deja agosto 2026 como "libre" si la cuota 8 ya está pagada. */
+  if(id==="pb"){const cal=pbCalendario();cal.filter(f=>f.pagada).forEach(f=>mesesPagados.add(mesClave(f.fecha)));}
   const mcActual=mesClave(HOY);
   const opciones=OPCIONES_MES.map(o=>({clave:o.clave,label:o.label+(mesesPagados.has(o.clave)?" (pagado)":""),actual:o.actual}));
   const libre=opciones.find(o=>!mesesPagados.has(o.clave)&&o.clave>=mcActual)||opciones.find(o=>!mesesPagados.has(o.clave))||opciones[0];
@@ -785,7 +919,7 @@ function cajaPago(id,estado,montoSugerido){
   return '<div class="pago-caja">'+
    '<label class="check-caja"><input type="checkbox" id="chk-'+id+'" '+(selPagado?"checked disabled":"")+' onchange="toggleValor(\''+id+'\')"> Pago realizado</label>'+
    '<div class="pago-fila" style="gap:8px;align-items:center;flex-wrap:wrap">'+
-    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff" onchange="cambioMesPago(\''+id+'\')">'+selectMes+'</select>'+
+    '<select id="mes-'+id+'" class="valor" style="min-width:160px;padding:9px 12px;font-size:.9rem;border:1.5px solid var(--borde);border-radius:10px;background:var(--select-bg);color:var(--input-txt)" onchange="cambioMesPago(\''+id+'\')">'+selectMes+'</select>'+
     '<input class="valor" type="number" step="0.01" id="val-'+id+'" value="'+montoSugerido.toFixed(2)+'" '+(selPagado?"disabled":"")+' title="Puedes registrar un pago mayor al mínimo: el excedente se tratará como abono">'+
     '<button class="btn-registrar" id="btn-'+id+'" onclick="registrarPago(\''+id+'\')" '+(selPagado?"disabled":"")+'>Registrar</button>'+
    '</div>'+
@@ -883,17 +1017,15 @@ function registrarPago(id){
   }
   if(id==="pb"){
     const d=DEUDAS.pb,st=S.deudas.pb;
-    /* Generar calendario y buscar la fila del mes seleccionado (mc) */
+    /* Generar calendario desde la tabla REAL y buscar la fila del mes seleccionado (mc) */
     const cal=pbCalendario();
     const [ySel,mSel]=mc.split("-").map(Number);
     let fila=cal.find(f=>f.fecha.getFullYear()===ySel && f.fecha.getMonth()===mSel-1);
-    if(!fila)fila=cal[0]; // fallback a la primera pendiente
+    if(!fila)fila=cal.find(f=>!f.pagada)||cal[0]; // fallback a la primera pendiente
     const atrasado=estaAtrasado(mc,d.diaPago);
-    /* CORRECCIÓN: Calcular interés y capital según tabla francesa
-       Solo la porción de capital reduce el saldo; el interés se paga al banco */
-    const tasa=pbTasaImplicita();
-    const interes=st.saldo*tasa;
-    const capital=Math.max(0,Math.min(st.saldo,monto-interes));
+    /* Usar el CAPITAL REAL de la tabla de amortización de Produbanco.
+       Solo la porción de capital reduce el saldo; el interés se paga al banco. */
+    const capital=fila.capital;
     st.saldo=Math.max(0,st.saldo-capital);
     st.cuotasPagadas++;
     registros.push({deuda:"pb",mes:mc,fecha:HOY.toISOString(),monto,atrasado:!!atrasado,
@@ -945,6 +1077,53 @@ function mesCompleto(){
   });
 }
 
+/* ---------- Próximos vencimientos (M5) ---------- */
+function renderProximos(){
+  const cont=document.getElementById("proximos");
+  if(!cont)return;
+  const items=[];
+  /* Pacífico: cuota fija, vence el día límite del mes actual (o del próximo si ya pasó) */
+  const bpVence=new Date(HOY.getFullYear(),HOY.getMonth(),DEUDAS.bp.diaLimite);
+  if(bpVence<HOY)bpVence.setMonth(bpVence.getMonth()+1);
+  items.push({banco:"Banco del Pacífico",color:DEUDAS.bp.color,fecha:bpVence,monto:S.deudas.bp.cuotaFija});
+  /* Guayaquil: primera cuota pendiente de la tabla real */
+  const bgPend=bgFilasPendientes();
+  if(bgPend.length){
+    const f=parseDMY(bgPend[0].fila[0]);
+    const exig=(S.deudas.bg.exigibles&&S.deudas.bg.exigibles[String(bgPend[0].n)]!==undefined)?S.deudas.bg.exigibles[String(bgPend[0].n)]:bgPend[0].fila[5];
+    items.push({banco:"Banco de Guayaquil",color:DEUDAS.bg.color,fecha:f,monto:exig});
+  }
+  /* Produbanco: primera cuota pendiente del calendario */
+  const pbPend=pbCalendario().find(f=>!f.pagada);
+  if(pbPend)items.push({banco:"Produbanco",color:DEUDAS.pb.color,fecha:pbPend.fecha,monto:DEUDAS.pb.cuota});
+  if(!items.length){cont.innerHTML="";return;}
+  const html='<div class="panel"><h3>📅 Próximos vencimientos</h3><div class="proximos-grid">'+
+    items.map(it=>{
+      const vencido=it.fecha<HOY;
+      const fechaTxt=formatoFecha(it.fecha)+(vencido?" (vencido)":"");
+      return '<div class="prox-item'+(vencido?" vencido":"")+'">'+
+        '<div class="p-izq"><span class="punto" style="background:'+it.color+'"></span>'+
+        '<div><div class="p-nombre">'+it.banco+'</div><div class="p-fecha">'+fechaTxt+'</div></div></div>'+
+        '<div class="p-monto">'+fmt(it.monto)+'</div></div>';
+    }).join("")+'</div></div>';
+  cont.innerHTML=html;
+}
+
+/* ---------- Indicador de scroll horizontal (M6) ---------- */
+function actualizarScrollHints(){
+  document.querySelectorAll(".tabla-scroll").forEach(el=>{
+    const puede=el.scrollWidth>el.clientWidth+2;
+    el.classList.toggle("can-scroll",puede);
+    if(puede&&!el.querySelector(".scroll-hint")){
+      const h=document.createElement("span");
+      h.className="scroll-hint";h.setAttribute("aria-hidden","true");h.textContent="›";
+      el.appendChild(h);
+    }else if(!puede){
+      const h=el.querySelector(".scroll-hint");if(h)h.remove();
+    }
+  });
+}
+
 /* ---------- Historial ---------- */
 function renderHistorial(){
   const tb=document.querySelector("#tablaHistorial tbody");
@@ -954,7 +1133,7 @@ function renderHistorial(){
     const idx=S.pagos.length-1-revIdx; // índice en el array original
     const[cls,txt]=p.atrasado?["mal","Pago atrasado"]:["ok","A tiempo"];
     const tieneSnap=p.snapDeudas?"":" (sin snapshot)";
-    return"<tr><td>"+new Date(p.fecha).toLocaleDateString("es-EC")+"</td><td>"+DEUDAS[p.deuda].banco+"</td><td>"+p.detalle+"</td><td>"+fmt(p.monto)+"</td><td><span class='mini-badge "+cls+"'>"+txt+"</span></td><td style='text-align:center'><button class='btn-peligro' onclick='deshacerPago("+idx+")' style='font-size:.7rem;padding:4px 8px' title='Deshacer este pago"+tieneSnap+"'>↩</button></td></tr>";
+    return"<tr><td>"+new Date(p.fecha).toLocaleDateString("es-EC")+"</td><td>"+DEUDAS[p.deuda].banco+"</td><td>"+p.detalle+"</td><td>"+fmt(p.monto)+"</td><td><span class='mini-badge "+cls+"'>"+txt+"</span></td><td style='text-align:center'><button class='btn-peligro' onclick='deshacerPago("+idx+")' style='font-size:.7rem;padding:4px 8px' title='Deshacer este pago"+tieneSnap+"' aria-label='Deshacer pago de "+DEUDAS[p.deuda].banco+"'>↩</button></td></tr>";
   }).join(""):"<tr><td colspan='6' style='text-align:center;color:var(--gris)'>Aún no hay pagos registrados.</td></tr>");
   const panel=document.querySelector(".historial");
   if(panel && !panel.querySelector(".historial-header")){
@@ -968,11 +1147,14 @@ function renderHistorial(){
 /* ---------- Gráficos ---------- */
 let chEv,chDo,chFl;
 function renderGraficos(eBG,ePB){
+  const cs=getComputedStyle(document.documentElement);
+  const txtColor=cs.getPropertyValue("--gris").trim()||"#64748b";
+  const gridColor=cs.getPropertyValue("--borde-suave").trim()||"#f1f5f9";
   const mesesN=12,labels=[],f=new Date(HOY.getFullYear(),HOY.getMonth(),1);
   for(let k=0;k<mesesN;k++){labels.push(MESES[(f.getMonth()+k)%12].slice(0,3)+" "+String((f.getFullYear()+Math.floor((f.getMonth()+k)/12))%100).padStart(2,"0"));}
   const bpP=bpProyeccion(mesesN);
   const bgP=[];for(let k=0;k<mesesN;k++){const i=S.deudas.bg.indiceActual+k;bgP.push(i<BG_TABLA.length?BG_TABLA[i][6]:0);}
-  const pbP=[];{const cal=pbCalendario();for(let k=0;k<mesesN;k++){pbP.push(k<cal.length?Math.round(cal[k].saldoTras*100)/100:0);}}
+  const pbP=[];{const cal=pbCalendario();const pend=cal.filter(f=>!f.pagada);for(let k=0;k<mesesN;k++){pbP.push(k<pend.length?Math.round(pend[k].saldoTras*100)/100:0);}}
   const totalM=labels.map((_,k)=>Math.round((bpP[k]+bgP[k]+pbP[k])*100)/100);
   // Dona: valores con coerción, usando SOLO variables en scope (S y los parámetros eBG/ePB)
   const donutData=[Number(S.deudas.bp?.saldo)||0,Number(eBG?.saldo)||0,Number(ePB?.saldo)||0];
@@ -983,21 +1165,25 @@ function renderGraficos(eBG,ePB){
       {type:"bar",stack:"s",label:"Banco del Pacífico",data:bpP,backgroundColor:"#2563eb",borderRadius:4},
       {type:"bar",stack:"s",label:"Banco de Guayaquil",data:bgP,backgroundColor:"#dc2626",borderRadius:4},
       {type:"bar",stack:"s",label:"Produbanco",data:pbP,backgroundColor:"#16a34a",borderRadius:4},
-      {type:"line",label:"Deuda total",data:totalM,borderColor:"#7c3aed",backgroundColor:"#7c3aed",tension:.35,pointRadius:3,borderWidth:2.5}
+      {type:"line",label:"Deuda total",data:totalM,borderColor:"#7c3aed",backgroundColor:"#7c3aed",tension:.35,pointRadius:3,borderWidth:2.5,yAxisID:"y2"}
     ]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
-      plugins:{legend:{position:"bottom",labels:{usePointStyle:true,boxWidth:8}}},
-      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>"$"+(v/1000).toFixed(1)+"k"}}}}
+      plugins:{legend:{position:"bottom",labels:{usePointStyle:true,boxWidth:8,color:txtColor}},
+        tooltip:{callbacks:{label:c=>c.dataset.yAxisID==="y2"?c.dataset.label+": "+fmt(c.raw):c.dataset.label+": "+fmt(c.raw)}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{color:txtColor}},
+        y:{stacked:true,position:"left",grid:{color:gridColor},ticks:{color:txtColor,callback:v=>"$"+(v/1000).toFixed(1)+"k"}},
+        y2:{stacked:false,position:"right",grid:{drawOnChartArea:false},ticks:{color:txtColor,callback:v=>"$"+(v/1000).toFixed(1)+"k"}}}}
   });
 
   if(chDo)chDo.destroy();
+  const donutBorder=getComputedStyle(document.documentElement).getPropertyValue("--donut-border").trim()||"#fff";
   chDo=new Chart(document.getElementById("chDona"),{
     type:"doughnut",
     data:{labels:["Banco del Pacífico","Banco de Guayaquil","Produbanco"],
       datasets:[{data:donutData,
-        backgroundColor:["#2563eb","#dc2626","#16a34a"],borderWidth:3,borderColor:"#fff",hoverOffset:10}]},
+        backgroundColor:["#2563eb","#dc2626","#16a34a"],borderWidth:3,borderColor:donutBorder,hoverOffset:10}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:"62%",animation:{animateRotate:true,duration:1000},
-      plugins:{legend:{position:"bottom",labels:{usePointStyle:true,boxWidth:8}},
+      plugins:{legend:{position:"bottom",labels:{usePointStyle:true,boxWidth:8,color:txtColor}},
         tooltip:{callbacks:{label:c=>c.label+": "+fmt(c.raw)}}}}
   });
 
@@ -1010,7 +1196,7 @@ function renderGraficos(eBG,ePB){
         backgroundColor:["#0ea5e9","#f43f5e","#a855f7","#22c55e"],borderRadius:8,maxBarThickness:64}]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:900},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},
-      scales:{y:{ticks:{callback:v=>"$"+v},beginAtZero:true}}}
+      scales:{x:{ticks:{color:txtColor}},y:{ticks:{color:txtColor,callback:v=>"$"+Number(v).toLocaleString("es-EC")},grid:{color:gridColor},beginAtZero:true}}}
   });
 }
 
@@ -1024,9 +1210,29 @@ function animarDetalles(estados){
 }
 
 /* ---------- Modales ---------- */
-function abrirModal(id){document.getElementById(id).classList.add("abierto");}
-function cerrarModal(id){document.getElementById(id).classList.remove("abierto");}
-document.querySelectorAll(".modal-fondo").forEach(m=>m.addEventListener("click",ev=>{if(ev.target===m)m.classList.remove("abierto");}));
+let ultimoFoco=null;
+function abrirModal(id){
+  const m=document.getElementById(id);
+  ultimoFoco=document.activeElement;
+  m.classList.add("abierto");
+  /* M8: mover el foco al primer elemento enfocable del modal */
+  const enfocable=m.querySelector("button,input,select,textarea,[tabindex]:not([tabindex='-1'])");
+  if(enfocable)enfocable.focus();
+}
+function cerrarModal(id){
+  document.getElementById(id).classList.remove("abierto");
+  /* M8: devolver el foco al elemento que abrió el modal */
+  if(ultimoFoco&&ultimoFoco.focus)ultimoFoco.focus();
+  ultimoFoco=null;
+}
+document.querySelectorAll(".modal-fondo").forEach(m=>m.addEventListener("click",ev=>{if(ev.target===m)cerrarModal(m.id);}));
+/* M8: cerrar con Escape */
+document.addEventListener("keydown",ev=>{
+  if(ev.key==="Escape"){
+    const abierto=document.querySelector(".modal-fondo.abierto");
+    if(abierto)cerrarModal(abierto.id);
+  }
+});
 
 function verTablaBG(){
   const idx=S.deudas.bg.indiceActual;
@@ -1045,19 +1251,21 @@ function verPlan(id){
   const esBP=id==="bp";
   document.getElementById("tablaTitulo").textContent=(esBP?"Banco del Pacífico — Plan de pago estimado":"Produbanco — Calendario de pagos");
   document.getElementById("tablaSub").textContent=esBP?"Modelo proporcional sobre tu saldo real (el banco aplica su propia tabla del diferido)":"Recalibrado a tu saldo y cuota reales";
-  let html="<thead><tr><th>N.</th><th>Fecha aprox.</th><th>Cuota</th><th>Saldo tras pago</th></tr></thead><tbody>";
+  let html="<thead><tr><th>N.</th><th>Fecha aprox.</th><th>Cuota</th><th>Saldo tras pago</th><th>Estado</th></tr></thead><tbody>";
   filas.forEach((f,i)=>{
     const fecha=esBP?f.fecha:f.fecha;
-    html+="<tr class='"+(i===0?"fila-actual":"")+"'><td>"+f.n+"</td><td>"+formatoFecha(fecha)+"</td><td>"+fmt(f.total!==undefined?f.total:f.cuota)+"</td><td>"+fmt(f.saldoTras)+"</td></tr>";
+    const estado=esBP?"":(f.pagada?'<span class="est-pagada">Pagada</span>':'<span class="est-pendiente">Pendiente</span>');
+    html+="<tr class='"+(i===0&&!esBP&&!f.pagada?"fila-actual":"")+(f.pagada?" fila-pagada":"")+"'><td>"+f.n+"</td><td>"+formatoFecha(fecha)+"</td><td>"+fmt(f.total!==undefined?f.total:f.cuota)+"</td><td>"+fmt(f.saldoTras)+"</td><td>"+estado+"</td></tr>";
   });
   document.getElementById("tablaAmBody").innerHTML=html+"</tbody>";
   abrirModal("modalTabla");
 }
 function planBP(){
-  const st=S.deudas.bp;let saldo=st.saldo,rest=Math.max(1,st.totalCuotas-st.cuotasPagadas);
+  const st=S.deudas.bp;let saldo=st.saldo,rest=Math.max(1,DEUDAS.bp.totalCuotas-st.cuotasPagadas);
   const out=[];const f=new Date(HOY.getFullYear(),HOY.getMonth(),DEUDAS.bp.diaLimite);
-  for(let k=0;k<rest&&saldo>0.01;k++){
-    const cap=saldo/rest;saldo-=cap;f.setMonth(k>0?f.getMonth()+1:f.getMonth());
+  const total=rest;
+  for(let k=0;k<total&&saldo>0.01;k++){
+    const cap=saldo/rest;saldo-=cap;rest--;f.setMonth(k>0?f.getMonth()+1:f.getMonth());
     out.push({n:st.cuotasPagadas+k+1,fecha:new Date(f),total:st.cuotaFija,saldoTras:Math.max(0,saldo)});
   }
   return out;
@@ -1147,7 +1355,26 @@ setInterval(()=>{
 },60000);
 
 /* ---------- Arranque ---------- */
+/* M1: modo oscuro con persistencia */
+const CLAVE_TEMA="dashfin_tema";
+function aplicarTema(t){
+  document.documentElement.setAttribute("data-theme",t);
+  const btn=document.getElementById("btnTema");
+  if(btn)btn.textContent=t==="dark"?"☀️":"🌙";
+  try{localStorage.setItem(CLAVE_TEMA,t);}catch(e){}
+}
+function initTema(){
+  let t="light";
+  try{t=localStorage.getItem(CLAVE_TEMA)||"light";}catch(e){}
+  aplicarTema(t);
+  const btn=document.getElementById("btnTema");
+  if(btn)btn.addEventListener("click",()=>{
+    const actual=document.documentElement.getAttribute("data-theme")==="dark"?"dark":"light";
+    aplicarTema(actual==="dark"?"light":"dark");
+  });
+}
 document.addEventListener("DOMContentLoaded",()=>{
+  initTema();
   verificarCambioMes();
   /* botón config del footer usa abrirConfig */
   const btnCfg=document.querySelector("footer button");
@@ -1169,6 +1396,9 @@ window.deshacerPago=deshacerPago;
     if(seen.has(el))return;
     seen.add(el);
     el.addEventListener('pointermove',function(e){
+      /* M7: no aplicar tilt cuando el puntero está sobre un control interactivo */
+      const t=e.target;
+      if(t&&(t.closest('input,select,button,textarea,a,label,.check-caja')))return;
       const r=this.getBoundingClientRect();
       const rx=((e.clientY-r.top)/r.height-.5)*-5;
       const ry=((e.clientX-r.left)/r.width-.5)*5;
