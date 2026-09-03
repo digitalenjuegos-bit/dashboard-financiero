@@ -590,6 +590,13 @@ function estadoInicial(){return{
        bp:{saldo:12590.70,cuotaFija:267.88,cuotasPagadas:12,saldoInicialRef:16072.88},
        bg:{indiceActual:11,exigibles:{"12":465.53}},
        pb:{saldo:8772.53,cuotasPagadas:8}
+     }},
+    {deuda:"pb",mes:"2026-09",fecha:"2026-09-02T00:00:00.000Z",monto:376.83,atrasado:false,
+     detalle:"Pago $376.83 (cuota 9 de 36)",
+     snapDeudas:{
+       bp:{saldo:12590.50,cuotaFija:267.88,cuotasPagadas:13,saldoInicialRef:16072.88},
+       bg:{indiceActual:11,exigibles:{"12":465.53}},
+       pb:{saldo:8772.53,cuotasPagadas:8}
      }}
   ]
 };}
@@ -598,7 +605,13 @@ function cargar(){
   try{const raw=localStorage.getItem(CLAVE_LS);
     if(!raw)return estadoInicial();
     const d=JSON.parse(raw);const base=estadoInicial();
-    const merged={...base,...d,deudas:{...base.deudas,...(d.deudas||{})},pagos:d.pagos||[]};
+    // Merge pagos: base + localStorage, dedup by (deuda, mes) — localStorage wins on conflict
+    const basePagos=base.pagos||[]; const lsPagos=d.pagos||[];
+    const pagoMap=new Map();
+    basePagos.forEach(p=>pagoMap.set(p.deuda+ '|' +p.mes,p));
+    lsPagos.forEach(p=>pagoMap.set(p.deuda+ '|' +p.mes,p));
+    const mergedPagos=[...pagoMap.values()];
+    const merged={...base,...d,deudas:{...base.deudas,...(d.deudas||{})},pagos:mergedPagos};
     // Coerce numeric fields (localStorage stores numbers as strings)
     const num=(v)=>v===undefined||v===null||v===""?0:Number(v);
     if(merged.deudas.bp){
